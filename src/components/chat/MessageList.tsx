@@ -3,10 +3,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { User, Bot, Loader2 } from 'lucide-react';
 import type { ChatMessage } from '@/types';
+import RecommendationViews from './RecommendationViews';
+import { parseAIResponse } from '@/lib/utils/responseParser';
 
 interface MessageListProps {
   messages: ChatMessage[];
   isLoading?: boolean;
+  onSaveTrip?: () => void;
 }
 
 function formatTimestamp(timestamp: string): string {
@@ -14,12 +17,12 @@ function formatTimestamp(timestamp: string): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MessageList({ messages, isLoading }: MessageListProps) {
+export default function MessageList({ messages, isLoading, onSaveTrip }: MessageListProps) {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-full">
       {messages.map((message, index) => (
-        <MessageBubble key={index} message={message} />
+        <MessageBubble key={index} message={message} onSaveTrip={onSaveTrip} />
       ))}
       
       {isLoading && (
@@ -45,7 +48,7 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, onSaveTrip }: { message: ChatMessage; onSaveTrip?: () => void }) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   
@@ -93,6 +96,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               }`}>
                 <MessageContent content={message.content} />
               </div>
+              
+              {/* Show enhanced recommendations for assistant messages */}
+              {!isUser && <RecommendationViews messageContent={message.content} onSaveTrip={onSaveTrip} />}
               {message.metadata && (
                 <div className={`mt-2 text-xs ${
                   isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'

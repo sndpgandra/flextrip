@@ -199,7 +199,7 @@ export default function ChatInterface({
 
         {/* Messages Area */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList messages={messages} isLoading={isLoading} onSaveTrip={handleSaveTrip} />
           <div ref={messagesEndRef} />
         </div>
 

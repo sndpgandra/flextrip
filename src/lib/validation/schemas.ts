@@ -65,7 +65,7 @@ export const ChatRequestSchema = z.object({
 // Onboarding validation
 export const OnboardingDataSchema = z.object({
   traveler_count: z.number().int().min(1).max(8),
-  travelers: z.array(TravelerSchema.omit({ session_id: true })),
+  travelers: z.array(TravelerSchema),
   cultural_preferences: z.array(z.string()).optional(),
   completed: z.boolean().default(false),
 });

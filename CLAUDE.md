@@ -95,3 +95,12 @@ This is a planning phase project with comprehensive documentation but no impleme
 - `coding-implementation-guide-final.md` - Step-by-step implementation guide
 
 The project is designed for a 6-week development timeline targeting launch-ready MVP with self-sustaining operation within budget constraints.
+
+## Commit Message Guidelines
+
+When creating git commits, follow these requirements:
+- DO NOT include "Generated with Claude Code" or similar AI attribution
+- DO NOT include any "Co-Authored-By" lines with email addresses
+- Keep commit messages concise and descriptive
+- Focus on what was changed and why
+- Use conventional commit format when appropriate (feat:, fix:, docs:, etc.)

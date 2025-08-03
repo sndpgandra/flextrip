@@ -175,8 +175,8 @@ Provide thoughtful, detailed recommendations that ensure everyone in this multi-
   }
 
   private generateCulturalGuidelines(travelers: Traveler[]): string {
-    const cultures = [...new Set(travelers.map(t => t.cultural_background).filter(Boolean))];
-    const dietary = [...new Set(travelers.flatMap(t => t.dietary_restrictions || []))];
+    const cultures = Array.from(new Set(travelers.map(t => t.cultural_background).filter(Boolean)));
+    const dietary = Array.from(new Set(travelers.flatMap(t => t.dietary_restrictions || [])));
 
     let guidelines = '';
     

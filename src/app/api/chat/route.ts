@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OpenRouterAI } from '@/lib/ai/openrouter';
 import { ChatRequestSchema } from '@/lib/validation/schemas';
 import { rateLimit } from '@/lib/utils/rate-limit';
+import type { Traveler } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     }));
     
     // Generate AI response
-    const aiResponse = await openRouter.generateResponse(chatMessages, travelers);
+    const aiResponse = await openRouter.generateResponse(chatMessages, travelers as Traveler[]);
     
     // Create response message
     const responseMessage = {
