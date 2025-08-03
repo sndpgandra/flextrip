@@ -11,10 +11,10 @@ export const TravelerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name too long'),
   age: z.number().int().min(1, 'Age must be at least 1').max(120, 'Age must be under 120'),
   mobility: z.enum(['high', 'medium', 'low']).default('high'),
-  relationship: z.string().optional(),
-  interests: z.array(z.string()).max(10, 'Maximum 10 interests').optional(),
-  cultural_background: z.string().optional(),
-  dietary_restrictions: z.array(z.string()).max(10, 'Maximum 10 dietary restrictions').optional(),
+  relationship: z.string().optional().nullable(),
+  interests: z.array(z.string()).max(10, 'Maximum 10 interests').optional().nullable(),
+  cultural_background: z.string().optional().nullable(),
+  dietary_restrictions: z.array(z.string()).max(10, 'Maximum 10 dietary restrictions').optional().nullable(),
 });
 
 export const CreateTravelerSchema = TravelerSchema.extend({
