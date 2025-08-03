@@ -14,6 +14,9 @@ export default function ChatPage() {
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string>('');
+  const [currentTripTitle, setCurrentTripTitle] = useState<string>();
 
   useEffect(() => {
     initializeChat();
@@ -45,6 +48,10 @@ export default function ChatPage() {
   };
 
   const handleSaveTrip = async (title: string, messages: ChatMessage[]) => {
+    setIsSaving(true);
+    setSaveSuccess('');
+    setError('');
+
     try {
       const response = await fetch('/api/trips', {
         method: 'POST',
@@ -63,13 +70,17 @@ export default function ChatPage() {
       const result = await response.json();
       
       if (result.success) {
-        // Show success message or redirect to trips page
-        console.log('Trip saved successfully');
+        setSaveSuccess(`Trip "${title}" saved successfully!`);
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => setSaveSuccess(''), 3000);
       } else {
-        console.error('Failed to save trip:', result.error);
+        setError(`Failed to save trip: ${result.error}`);
       }
     } catch (error) {
       console.error('Error saving trip:', error);
+      setError('Failed to save trip. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -83,6 +94,34 @@ export default function ChatPage() {
       }
     }
     return undefined;
+  };
+
+  const handleAddTraveler = () => {
+    router.push('/onboarding?mode=add');
+  };
+
+  const handleEditTraveler = (traveler: Traveler) => {
+    router.push(`/onboarding?mode=edit&id=${traveler.id}`);
+  };
+
+  const handleRemoveTraveler = async (travelerId: string) => {
+    try {
+      const response = await fetch(`/api/travelers/${travelerId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setTravelers(prev => prev.filter(t => t.id !== travelerId));
+      }
+    } catch (error) {
+      console.error('Error removing traveler:', error);
+    }
+  };
+
+  const handleNewTrip = () => {
+    setCurrentTripTitle(undefined);
+    // Could also clear chat messages or redirect
+    window.location.reload();
   };
 
   if (isLoading) {
@@ -146,6 +185,13 @@ export default function ChatPage() {
       sessionId={sessionId}
       travelers={travelers}
       onSaveTrip={handleSaveTrip}
+      isSaving={isSaving}
+      saveSuccess={saveSuccess}
+      onAddTraveler={handleAddTraveler}
+      onEditTraveler={handleEditTraveler}
+      onRemoveTraveler={handleRemoveTraveler}
+      onNewTrip={handleNewTrip}
+      currentTripTitle={currentTripTitle}
     />
   );
 }
