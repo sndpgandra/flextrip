@@ -25,7 +25,11 @@
     "next-pwa": "^5.6.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-    "tailwind-merge": "^2.2.0"
+    "tailwind-merge": "^2.2.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-progress": "^1.0.3",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
