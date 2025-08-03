@@ -9,11 +9,12 @@ interface MessageListProps {
   isLoading?: boolean;
 }
 
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 export default function MessageList({ messages, isLoading }: MessageListProps) {
-  const formatTimestamp = (timestamp: string): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
