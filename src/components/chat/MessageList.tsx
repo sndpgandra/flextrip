@@ -17,7 +17,7 @@ function formatTimestamp(timestamp: string): string {
 export default function MessageList({ messages, isLoading }: MessageListProps) {
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-full">
       {messages.map((message, index) => (
         <MessageBubble key={index} message={message} />
       ))}
@@ -61,7 +61,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <Card className={`max-w-3xl ${isUser ? 'bg-primary text-primary-foreground' : ''}`}>
+      <Card className={`max-w-3xl w-full ${isUser ? 'bg-primary text-primary-foreground' : ''}`}>
         <CardContent className="py-4">
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
@@ -88,7 +88,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                   {formatTimestamp(message.timestamp)}
                 </span>
               </div>
-              <div className={`prose prose-sm max-w-none ${
+              <div className={`prose prose-sm max-w-none break-words ${
                 isUser ? 'text-primary-foreground prose-invert' : 'text-foreground'
               }`}>
                 <MessageContent content={message.content} />
@@ -118,7 +118,7 @@ function MessageContent({ content }: { content: string }) {
   const paragraphs = content.split('\n\n');
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-wrap-anywhere">
       {paragraphs.map((paragraph, index) => {
         // Check if paragraph contains a list
         if (paragraph.includes('\n-') || paragraph.includes('\n•')) {

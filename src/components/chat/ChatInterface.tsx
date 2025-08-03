@@ -134,7 +134,7 @@ export default function ChatInterface({ sessionId, travelers, onSaveTrip }: Chat
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto">
+    <div className="flex flex-col h-screen max-w-4xl mx-auto min-h-0">
       {/* Header with Traveler Context */}
       <div className="bg-background border-b p-4">
         <div className="flex items-center justify-between mb-4">
@@ -152,7 +152,7 @@ export default function ChatInterface({ sessionId, travelers, onSaveTrip }: Chat
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden min-h-0">
         <MessageList messages={messages} isLoading={isLoading} />
         <div ref={messagesEndRef} />
       </div>
