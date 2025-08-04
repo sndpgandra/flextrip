@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Send, Users, Loader2, CheckCircle } from 'lucide-react';
 import type { ChatMessage, Traveler } from '@/types';
+import { RecommendationData } from './RecommendationCard';
 import TravelerContextBar from './TravelerContextBar';
 import MessageList from './MessageList';
 import FamilySidebar from './FamilySidebar';
@@ -40,6 +41,7 @@ export default function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sharedItinerary, setSharedItinerary] = useState<RecommendationData[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,7 +98,11 @@ export default function ChatInterface({
       }
 
       if (result.success) {
-        setMessages(prev => [...prev, result.data.message]);
+        const messageWithRecommendations = {
+          ...result.data.message,
+          structured_recommendations: result.data.structured_recommendations || []
+        };
+        setMessages(prev => [...prev, messageWithRecommendations]);
       } else {
         throw new Error(result.error || 'Unknown error');
       }
@@ -199,7 +205,13 @@ export default function ChatInterface({
 
         {/* Messages Area */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <MessageList messages={messages} isLoading={isLoading} onSaveTrip={handleSaveTrip} />
+          <MessageList 
+            messages={messages} 
+            isLoading={isLoading} 
+            onSaveTrip={handleSaveTrip}
+            sharedItinerary={sharedItinerary}
+            onUpdateItinerary={setSharedItinerary}
+          />
           <div ref={messagesEndRef} />
         </div>
 

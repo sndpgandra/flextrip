@@ -9,36 +9,55 @@ import { parseAIResponse } from '@/lib/utils/responseParser';
 
 interface RecommendationViewsProps {
   messageContent: string;
+  structuredRecommendations?: any[];
   onSaveTrip?: () => void;
+  sharedItinerary?: RecommendationData[];
+  onUpdateItinerary?: (itinerary: RecommendationData[]) => void;
 }
 
 export default function RecommendationViews({
   messageContent,
-  onSaveTrip
+  structuredRecommendations,
+  onSaveTrip,
+  sharedItinerary = [],
+  onUpdateItinerary
 }: RecommendationViewsProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('category');
   const [recommendations, setRecommendations] = useState<RecommendationData[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [itinerary, setItinerary] = useState<RecommendationData[]>([]);
+
+  // Debug log when view mode changes
+  const handleViewChange = (newView: ViewMode) => {
+    console.log('Switching to view:', newView, 'Current shared itinerary length:', sharedItinerary.length);
+    setViewMode(newView);
+  };
 
   // Parse the AI response into structured recommendations
   useEffect(() => {
-    const parsed = parseAIResponse(messageContent);
+    const parsed = parseAIResponse(messageContent, structuredRecommendations);
     if (parsed.hasRecommendations) {
       setRecommendations(parsed.recommendations);
     }
-  }, [messageContent]);
+  }, [messageContent, structuredRecommendations]);
 
   const handleAddToDay = (recommendation: RecommendationData) => {
-    // Add to itinerary if not already there
-    if (!itinerary.find(item => item.id === recommendation.id)) {
-      setItinerary(prev => [...prev, recommendation]);
-      // Show a success message or animation here
+    console.log('Adding to shared day:', recommendation.title);
+    if (!onUpdateItinerary) return;
+    
+    // Add to shared itinerary if not already there
+    if (!sharedItinerary.find(item => item.id === recommendation.id)) {
+      const newItinerary = [...sharedItinerary, recommendation];
+      console.log('New shared itinerary length:', newItinerary.length);
+      onUpdateItinerary(newItinerary);
+    } else {
+      console.log('Item already in shared itinerary');
     }
   };
 
   const handleRemoveFromDay = (recommendationId: string) => {
-    setItinerary(prev => prev.filter(item => item.id !== recommendationId));
+    if (!onUpdateItinerary) return;
+    const newItinerary = sharedItinerary.filter(item => item.id !== recommendationId);
+    onUpdateItinerary(newItinerary);
   };
 
   const handleToggleFavorite = (recommendationId: string) => {
@@ -71,7 +90,7 @@ export default function RecommendationViews({
       {/* View Toggle Controls */}
       <ViewToggle
         currentView={viewMode}
-        onViewChange={setViewMode}
+        onViewChange={handleViewChange}
         onSave={onSaveTrip}
         onExport={handleExport}
         onShare={handleShare}
@@ -88,18 +107,26 @@ export default function RecommendationViews({
         />
       ) : (
         <DayView
-          recommendations={itinerary}
+          recommendations={sharedItinerary}
           onAddToDay={handleAddToDay}
           onRemoveFromDay={handleRemoveFromDay}
         />
       )}
+
+      {/* Debug: Show current itinerary state */}
+      <div className="text-xs text-gray-500 mt-2">
+        Debug: Shared Itinerary has {sharedItinerary.length} items
+        {sharedItinerary.length > 0 && (
+          <div>Items: {sharedItinerary.map(item => item.title).join(', ')}</div>
+        )}
+      </div>
 
       {/* Quick Stats */}
       {recommendations.length > 0 && (
         <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground border-t pt-4">
           <span>{recommendations.length} recommendations</span>
           <span>{favorites.size} favorites</span>
-          <span>{itinerary.length} in itinerary</span>
+          <span>{sharedItinerary.length} in itinerary</span>
         </div>
       )}
     </div>

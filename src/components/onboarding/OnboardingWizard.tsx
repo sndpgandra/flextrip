@@ -99,8 +99,14 @@ export default function OnboardingWizard() {
     setError('');
 
     try {
-      // Save all travelers to the database
-      const savePromises = onboardingData.travelers.map(async (traveler) => {
+      // Clear any existing travelers for this session first
+      await fetch(`/api/travelers?sessionId=${sessionId}`, {
+        method: 'DELETE',
+      });
+      
+      // Save all travelers to the database sequentially to avoid race conditions
+      const savedTravelers = [];
+      for (const traveler of onboardingData.travelers) {
         const response = await fetch('/api/travelers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -111,13 +117,14 @@ export default function OnboardingWizard() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to save traveler');
+          const errorData = await response.json();
+          console.error('Failed to save traveler:', errorData);
+          throw new Error(`Failed to save traveler: ${errorData.error || 'Unknown error'}`);
         }
         
-        return response.json();
-      });
-
-      await Promise.all(savePromises);
+        const result = await response.json();
+        savedTravelers.push(result);
+      }
       
       setOnboardingData(prev => ({ ...prev, completed: true }));
       

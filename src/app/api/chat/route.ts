@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         message: responseMessage,
+        structured_recommendations: aiResponse.structured_recommendations || [],
         remaining_requests: rateLimitResult.remaining
       }
     });

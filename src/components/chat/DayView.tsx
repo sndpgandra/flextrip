@@ -63,10 +63,26 @@ export default function DayView({
   onAddToDay,
   onRemoveFromDay
 }: DayViewProps) {
-  // For now, we'll show a placeholder structure
-  // In Phase 2, this will be fully interactive with drag-and-drop
-  
   const hasRecommendations = recommendations.length > 0;
+  console.log('DayView received recommendations:', recommendations.length);
+
+  // Group recommendations by time slot
+  const groupedRecommendations = recommendations.reduce((acc, rec) => {
+    const timeSlot = rec.timeSlot || 'afternoon'; // default to afternoon if no timeSlot
+    if (!acc[timeSlot]) {
+      acc[timeSlot] = [];
+    }
+    acc[timeSlot].push(rec);
+    return acc;
+  }, {} as Record<string, RecommendationData[]>);
+
+  console.log('Grouped recommendations:', groupedRecommendations);
+
+  // Create time slots with actual recommendations
+  const timeSlots: TimeSlot[] = mockDayData.map(slot => ({
+    ...slot,
+    recommendations: groupedRecommendations[slot.id] || []
+  }));
 
   if (!hasRecommendations) {
     return (
@@ -105,7 +121,7 @@ export default function DayView({
 
       {/* Time Slots */}
       <div className="grid gap-4">
-        {mockDayData.map((timeSlot) => (
+        {timeSlots.map((timeSlot) => (
           <Card key={timeSlot.id} className={`${timeSlot.color} transition-all hover:shadow-md`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

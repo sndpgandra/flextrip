@@ -39,6 +39,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
+  structured_recommendations?: any[];
   metadata?: {
     model_used?: string;
     tokens_used?: number;
