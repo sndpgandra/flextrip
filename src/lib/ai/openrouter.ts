@@ -41,8 +41,10 @@ export class OpenRouterAI {
     ];
 
     try {
-      // Primary model: Claude 3.5 Sonnet
-      const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+      // Primary model: openrouter/horizon-beta
+      // const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+      const response = await this.callModel('openrouter/horizon-beta', requestMessages);
+      
       const rawContent = response.choices[0].message.content;
       
       // Log the raw response for debugging
@@ -59,16 +61,17 @@ export class OpenRouterAI {
         structured_recommendations: parsedResponse.structured_recommendations
       };
     } catch (error) {
-      console.warn('Claude 3.5 Sonnet failed, falling back to GPT-4o mini:', error);
-      
+      console.warn('openrouter/horizon-beta failed, falling back to Claude 3.5 Sonnet:', error);
+
       try {
-        // Fallback model: GPT-4o mini
-        const response = await this.callModel('openai/gpt-4o-mini', requestMessages);
+        // Secondary model: Claude 3.5 Sonnet
+        const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+        
         const rawContent = response.choices[0].message.content;
         
         // Log the raw response for debugging
-        console.log('Raw AI response (fallback) length:', rawContent.length);
-        console.log('Raw AI response (fallback) preview:', rawContent.substring(0, 500));
+        console.log('Raw AI response length:', rawContent.length);
+        console.log('Raw AI response preview:', rawContent.substring(0, 500));
         
         // Try to parse structured JSON response
         const parsedResponse = this.parseStructuredResponse(rawContent);
@@ -79,9 +82,31 @@ export class OpenRouterAI {
           tokens: response.usage?.total_tokens,
           structured_recommendations: parsedResponse.structured_recommendations
         };
-      } catch (fallbackError) {
-        console.error('Both AI models failed:', fallbackError);
-        throw new Error('AI service temporarily unavailable');
+      } catch (error) {
+        console.warn('Claude 3.5 Sonnet failed, falling back to GPT-4o mini:', error);
+      
+        try {
+          // Fallback model: GPT-4o mini
+          const response = await this.callModel('openai/gpt-4o-mini', requestMessages);
+          const rawContent = response.choices[0].message.content;
+          
+          // Log the raw response for debugging
+          console.log('Raw AI response (fallback) length:', rawContent.length);
+          console.log('Raw AI response (fallback) preview:', rawContent.substring(0, 500));
+          
+          // Try to parse structured JSON response
+          const parsedResponse = this.parseStructuredResponse(rawContent);
+          
+          return {
+            content: parsedResponse.conversational_response || rawContent,
+            model: response.model,
+            tokens: response.usage?.total_tokens,
+            structured_recommendations: parsedResponse.structured_recommendations
+          };
+        } catch (fallbackError) {
+          console.error('All AI models failed:', fallbackError);
+          throw new Error('AI service temporarily unavailable');
+        }
       }
     }
   }
