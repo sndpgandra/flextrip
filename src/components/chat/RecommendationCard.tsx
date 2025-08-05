@@ -86,14 +86,12 @@ export default function RecommendationCard({
             </div>
           </div>
           {onToggleFavorite && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
+            <button
+              className="flexitrip-button-ghost-secondary flexitrip-button-icon"
               onClick={() => onToggleFavorite(recommendation.id)}
             >
-              <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
+              <Heart className={`h-3 w-3 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+            </button>
           )}
         </div>
       </CardHeader>
@@ -165,15 +163,13 @@ export default function RecommendationCard({
         {/* Action Button */}
         {onAddToDay && (
           <div className="pt-2">
-            <Button
+            <button
               onClick={() => onAddToDay(recommendation)}
-              size="sm"
-              className="w-full"
-              variant="default"
+              className="flexitrip-button-ghost-secondary flexitrip-button-compact w-full"
             >
-              <CalendarPlus className="h-4 w-4 mr-2" />
+              <CalendarPlus className="h-3 w-3 mr-2" />
               Add to Day
-            </Button>
+            </button>
           </div>
         )}
       </CardContent>

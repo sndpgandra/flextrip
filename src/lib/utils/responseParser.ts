@@ -25,7 +25,7 @@ const categoryKeywords = {
     'shuttle', 'airport', 'station', 'getting around', 'travel'
   ],
   accommodation: [
-    'hotel', 'hostel', 'resort', 'inn', 'lodge', 'motel', 'bnb', 'airbnb',
+    'hotel', 'hostel', 'resort', 'inn', 'lodge', 'motel', 'bnb', 'vacation rental',
     'accommodation', 'stay', 'room', 'suite', 'apartment', 'villa'
   ]
 };

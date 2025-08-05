@@ -121,32 +121,35 @@ export class OpenRouterAI {
       try {
         parsed = JSON.parse(content);
       } catch (directParseError) {
-        console.warn('Direct JSON parse failed, trying extraction:', directParseError);
+        console.warn('Direct JSON parse failed, trying recovery:', directParseError);
         
-        // If direct parsing fails, try to find a complete JSON object
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
+        // Try to recover from truncated JSON
+        let recoveredJson = this.recoverTruncatedJson(content);
+        
+        if (recoveredJson) {
+          try {
+            parsed = JSON.parse(recoveredJson);
+          } catch (recoveryError) {
+            console.warn('JSON recovery failed:', recoveryError);
+            return { conversational_response: content, structured_recommendations: [] };
+          }
+        } else {
           return { conversational_response: content, structured_recommendations: [] };
         }
-
-        let jsonString = jsonMatch[0];
-        
-        // Try to fix common JSON issues
-        // Remove trailing commas before closing brackets/braces
-        jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
-
-        parsed = JSON.parse(jsonString);
       }
       
       // Validate the structure
-      if (parsed.conversational_response && Array.isArray(parsed.structured_recommendations)) {
-        return parsed;
+      if (parsed && typeof parsed === 'object') {
+        return {
+          conversational_response: parsed.conversational_response || 'I can help you plan your trip!',
+          structured_recommendations: Array.isArray(parsed.structured_recommendations) ? parsed.structured_recommendations : []
+        };
       }
       
-      // If structure is invalid but we have some data, try to salvage it
+      // If structure is invalid, return fallback
       return {
-        conversational_response: parsed.conversational_response || content,
-        structured_recommendations: Array.isArray(parsed.structured_recommendations) ? parsed.structured_recommendations : []
+        conversational_response: typeof parsed === 'string' ? parsed : content,
+        structured_recommendations: []
       };
       
     } catch (parseError) {
@@ -154,11 +157,65 @@ export class OpenRouterAI {
       console.warn('Content preview:', content.substring(0, 500));
     }
     
-    // Fallback to original parsing method if structured parsing fails
+    // Fallback to treating content as conversational response
     return {
       conversational_response: content,
       structured_recommendations: []
     };
+  }
+
+  private recoverTruncatedJson(content: string): string | null {
+    try {
+      // Find the JSON object start
+      const jsonMatch = content.match(/\{[\s\S]*$/);
+      if (!jsonMatch) return null;
+
+      let jsonString = jsonMatch[0];
+      
+      // Remove any trailing incomplete content
+      jsonString = jsonString.replace(/,\s*$/, '');
+      jsonString = jsonString.replace(/"\s*$/, '');
+      jsonString = jsonString.replace(/[^"}\]]*$/, '');
+      
+      // Fix common truncation issues
+      jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+      
+      // Try to close incomplete structures
+      let openBraces = 0;
+      let openBrackets = 0;
+      let inString = false;
+      let lastChar = '';
+      
+      for (let i = 0; i < jsonString.length; i++) {
+        const char = jsonString[i];
+        
+        if (char === '"' && lastChar !== '\\') {
+          inString = !inString;
+        } else if (!inString) {
+          if (char === '{') openBraces++;
+          else if (char === '}') openBraces--;
+          else if (char === '[') openBrackets++;
+          else if (char === ']') openBrackets--;
+        }
+        
+        lastChar = char;
+      }
+      
+      // Close any unclosed structures
+      while (openBrackets > 0) {
+        jsonString += ']';
+        openBrackets--;
+      }
+      while (openBraces > 0) {
+        jsonString += '}';
+        openBraces--;
+      }
+      
+      return jsonString;
+    } catch (error) {
+      console.warn('JSON recovery failed:', error);
+      return null;
+    }
   }
 
   async generateStreamingResponse(messages: ChatMessage[], travelers: Traveler[]): Promise<AsyncIterable<string>> {
@@ -191,7 +248,7 @@ export class OpenRouterAI {
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 2000, // Increased for structured responses
+        max_tokens: 4000, // Increased further to prevent truncation
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.1,
@@ -263,11 +320,13 @@ CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not inc
 MANDATORY RULES:
 1. Response must be ONLY valid JSON - no extra text
 2. Use only these categories: "attraction", "restaurant", "transport", "accommodation"
-3. Include 4-8 specific, real places in structured_recommendations
+3. Include 3-5 specific, real places in structured_recommendations (fewer items for reliability)
 4. Each title must be an actual place name (not description)
 5. Escape quotes in descriptions using backslash
-6. Keep descriptions under 100 characters to avoid JSON issues
-7. End JSON with proper closing braces - ensure complete response
+6. Keep descriptions under 80 characters to prevent truncation
+7. Keep conversational_response under 300 characters
+8. End JSON with proper closing braces - ensure complete response
+9. CRITICAL: Complete the JSON properly - do not let it get cut off
 
 Provide thoughtful, detailed recommendations that ensure everyone in this multi-generational group can enjoy the travel experience together.`;
   }

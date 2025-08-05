@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Send, Users, Loader2, CheckCircle } from 'lucide-react';
 import type { ChatMessage, Traveler } from '@/types';
 import { RecommendationData } from './RecommendationCard';
-import TravelerContextBar from './TravelerContextBar';
 import MessageList from './MessageList';
 import FamilySidebar from './FamilySidebar';
+import SearchBar from '@/components/ui/SearchBar';
+import Logo from '@/components/ui/Logo';
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -160,111 +161,143 @@ export default function ChatInterface({
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Family Sidebar */}
-      <FamilySidebar
-        travelers={travelers}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onAddTraveler={onAddTraveler || (() => {})} 
-        onEditTraveler={onEditTraveler || (() => {})}
-        onRemoveTraveler={onRemoveTraveler || (() => {})}
-        onNewTrip={onNewTrip || (() => {})}
-        currentTripTitle={currentTripTitle}
-      />
-      
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Header with Traveler Context */}
-        <div className="bg-background border-b p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Users className="h-6 w-6 text-primary mr-2" />
-              <h1 className="text-2xl font-bold">FlexiTrip Chat</h1>
-            </div>
+    <div className="h-screen flex flex-col bg-white">
+      {/* Top Navigation Bar - Modern Style */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Logo variant="full" size="md" />
+            
+            {/* Save Trip Button */}
             {messages.length > 1 && (
-              <Button 
-                variant="outline" 
+              <button 
                 onClick={handleSaveTrip}
                 disabled={isSaving}
-                className="flex items-center"
+                className="flexitrip-button-primary flexitrip-button-compact disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-3 w-3 animate-spin mr-2" />
                     Saving...
                   </>
                 ) : (
                   'Save Trip'
                 )}
-              </Button>
+              </button>
             )}
           </div>
-          <TravelerContextBar travelers={travelers} />
         </div>
+      </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <MessageList 
-            messages={messages} 
-            isLoading={isLoading} 
-            onSaveTrip={handleSaveTrip}
-            sharedItinerary={sharedItinerary}
-            onUpdateItinerary={setSharedItinerary}
+      {/* Search Bar Section */}
+      <div className="bg-white border-b border-gray-100 py-2">
+        <div className="max-w-4xl mx-auto px-4">
+          <SearchBar 
+            onSearch={(searchData) => {
+              const guestCount = travelers.length || 1;
+              const searchMessage = `I want to plan a trip to ${searchData.destination}${searchData.checkIn ? ` from ${searchData.checkIn}` : ''}${searchData.checkOut ? ` to ${searchData.checkOut}` : ''} for ${guestCount} ${guestCount === 1 ? 'person' : 'people'}.`;
+              setInputMessage(searchMessage);
+            }}
           />
-          <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Success/Error Display */}
-        {(error || saveSuccess) && (
-          <div className="px-4 py-2">
-            {error && (
-              <Card className="border-destructive mb-2">
-                <CardContent className="pt-4">
-                  <p className="text-destructive text-sm">{error}</p>
-                </CardContent>
-              </Card>
-            )}
-            {saveSuccess && (
-              <Card className="border-green-500 bg-green-50 mb-2">
-                <CardContent className="pt-4">
-                  <p className="text-green-700 text-sm flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    {saveSuccess}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+      {/* Main Content Area */}
+      <div className="flex-1 flex min-h-0 bg-[rgb(var(--background-light))]">
+        {/* Travelers Sidebar - Collapsible */}
+        <div className={`bg-white border-r border-[rgb(var(--border-light))] transition-all duration-300 ${
+          sidebarCollapsed ? 'w-12' : 'w-80'
+        }`}>
+          <FamilySidebar
+            travelers={travelers}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onAddTraveler={onAddTraveler || (() => {})} 
+            onEditTraveler={onEditTraveler || (() => {})}
+            onRemoveTraveler={onRemoveTraveler || (() => {})}
+            onNewTrip={onNewTrip || (() => {})}
+            currentTripTitle={currentTripTitle}
+          />
+        </div>
+        
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-hidden min-h-0">
+            <div className="h-full overflow-y-auto">
+              <div className="max-w-4xl mx-auto">
+                <MessageList 
+                  messages={messages} 
+                  isLoading={isLoading} 
+                  onSaveTrip={handleSaveTrip}
+                  sharedItinerary={sharedItinerary}
+                  onUpdateItinerary={setSharedItinerary}
+                />
+              </div>
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-        )}
 
-        {/* Input Area */}
-        <div className="border-t p-4">
-          <div className="flex space-x-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about your trip..."
-              disabled={isLoading}
-              className="flex-1"
-              maxLength={4000}
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-              size="icon"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
+          {/* Success/Error Display */}
+          {(error || saveSuccess) && (
+            <div className="max-w-4xl mx-auto px-4 py-2">
+              {error && (
+                <Card className="border-destructive mb-2">
+                  <CardContent className="pt-4">
+                    <p className="text-destructive text-sm">{error}</p>
+                  </CardContent>
+                </Card>
               )}
-            </Button>
+              {saveSuccess && (
+                <Card className="border-green-500 bg-green-50 mb-2">
+                  <CardContent className="pt-4">
+                    <p className="text-green-700 text-sm flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      {saveSuccess}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Modern Input Area */}
+          <div className="border-t border-gray-100 bg-white">
+            <div className="max-w-4xl mx-auto p-4 sm:p-6">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <textarea
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Ask me anything about your trip planning..."
+                    disabled={isLoading}
+                    rows={1}
+                    maxLength={4000}
+                    className="flexitrip-input resize-none"
+                    style={{ minHeight: '44px', maxHeight: '120px' }}
+                  />
+                </div>
+                <button
+                  onClick={sendMessage}
+                  disabled={isLoading || !inputMessage.trim()}
+                  className="flexitrip-button-primary rounded-full h-11 w-11 p-0 flex-shrink-0 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs flexitrip-text-secondary mt-3 text-center">
+                <span className="hidden sm:inline">Press Enter to send • Shift+Enter for new line • </span>
+                <span className="sm:hidden">Tap to send • </span>
+                {4000 - inputMessage.length} characters remaining
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Press Enter to send, Shift+Enter for new line
-          </p>
         </div>
       </div>
     </div>

@@ -29,7 +29,7 @@ export default function MessageList({
 }: MessageListProps) {
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-full">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {messages.map((message, index) => (
         <MessageBubble 
           key={index} 
@@ -41,23 +41,23 @@ export default function MessageList({
       ))}
       
       {isLoading && (
-        <Card className="max-w-3xl">
-          <CardContent className="py-4">
-            <div className="flex items-start space-x-3">
+        <div className="flex justify-start">
+          <div className="max-w-3xl flexitrip-card p-6">
+            <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
+                <div className="w-10 h-10 bg-[rgb(var(--primary-brand))] rounded-full flex items-center justify-center">
+                  <Bot className="h-5 w-5 text-white" />
                 </div>
               </div>
               <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">FlexiTrip is thinking...</span>
+                <div className="flex items-center space-x-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-[rgb(var(--primary-brand))]" />
+                  <span className="text-sm flexitrip-text-secondary">FlexiTrip is thinking...</span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -89,65 +89,71 @@ function MessageBubble({
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <Card className={`max-w-3xl w-full ${isUser ? 'bg-primary text-primary-foreground' : ''}`}>
-        <CardContent className="py-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                isUser ? 'bg-primary-foreground/20' : 'bg-primary'
-              }`}>
-                {isUser ? (
-                  <User className={`h-4 w-4 ${isUser ? 'text-primary-foreground' : 'text-primary-foreground'}`} />
-                ) : (
-                  <Bot className="h-4 w-4 text-primary-foreground" />
-                )}
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className={`text-sm font-medium ${
-                  isUser ? 'text-primary-foreground' : 'text-foreground'
-                }`}>
-                  {isUser ? 'You' : 'FlexiTrip'}
-                </span>
-                <span className={`text-xs ${
-                  isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                }`}>
-                  {formatTimestamp(message.timestamp)}
-                </span>
-              </div>
-              <div className={`prose prose-sm max-w-none break-words ${
-                isUser ? 'text-primary-foreground prose-invert' : 'text-foreground'
-              }`}>
-                <MessageContent content={message.content} />
-              </div>
-              
-              {/* Show enhanced recommendations for assistant messages */}
-              {!isUser && (
-                <RecommendationViews 
-                  messageContent={message.content} 
-                  structuredRecommendations={message.structured_recommendations}
-                  onSaveTrip={onSaveTrip}
-                  sharedItinerary={sharedItinerary}
-                  onUpdateItinerary={onUpdateItinerary}
-                />
-              )}
-              {message.metadata && (
-                <div className={`mt-2 text-xs ${
-                  isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                }`}>
-                  {message.metadata.model_used && (
-                    <span>Model: {message.metadata.model_used}</span>
-                  )}
-                  {message.metadata.tokens_used && (
-                    <span className="ml-2">Tokens: {message.metadata.tokens_used}</span>
-                  )}
-                </div>
+      <div className={`max-w-3xl w-full rounded-2xl p-4 sm:p-6 transition-all duration-200 ${
+        isUser 
+          ? 'flexitrip-gradient-bg text-white ml-4 sm:ml-12 shadow-lg' 
+          : 'flexitrip-card mr-4 sm:mr-12'
+      }`}>
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              isUser 
+                ? 'bg-white/20' 
+                : 'bg-[rgb(var(--background-blue-light))]'
+            }`}>
+              {isUser ? (
+                <User className="h-5 w-5 text-white" />
+              ) : (
+                <Bot className="h-5 w-5 text-[rgb(var(--primary-brand))]" />
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className={`text-sm sm:text-base font-semibold ${
+                isUser ? 'text-white' : 'flexitrip-text-primary'
+              }`}>
+                {isUser ? 'You' : 'FlexiTrip'}
+              </span>
+              <span className={`text-xs ${
+                isUser ? 'text-white/70' : 'flexitrip-text-light'
+              }`}>
+                {formatTimestamp(message.timestamp)}
+              </span>
+            </div>
+            <div className={`${
+              isUser ? 'text-white' : 'flexitrip-text-primary'
+            } leading-relaxed`}>
+              <MessageContent content={message.content} />
+            </div>
+            
+            {/* Show enhanced recommendations for assistant messages */}
+            {!isUser && (
+              <RecommendationViews 
+                messageContent={message.content} 
+                structuredRecommendations={message.structured_recommendations}
+                onSaveTrip={onSaveTrip}
+                sharedItinerary={sharedItinerary}
+                onUpdateItinerary={onUpdateItinerary}
+              />
+            )}
+            
+            {/* Metadata */}
+            {message.metadata && (
+              <div className={`mt-3 text-xs ${
+                isUser ? 'text-white/50' : 'flexitrip-text-light'
+              }`}>
+                {message.metadata.model_used && (
+                  <span>Model: {message.metadata.model_used}</span>
+                )}
+                {message.metadata.tokens_used && (
+                  <span className="ml-2">Tokens: {message.metadata.tokens_used}</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

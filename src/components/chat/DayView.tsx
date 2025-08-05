@@ -93,9 +93,9 @@ export default function DayView({
           Switch to Category View to browse recommendations,<br />
           then add them to your daily itinerary.
         </p>
-        <Button variant="outline">
+        <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
           Browse Recommendations
-        </Button>
+        </button>
       </div>
     );
   }
@@ -109,13 +109,13 @@ export default function DayView({
           <p className="text-muted-foreground">Your travel itinerary</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
+          <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
+            <Plus className="h-3 w-3 mr-1" />
             Add Day
-          </Button>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
+          </button>
+          <button className="flexitrip-button-ghost-secondary flexitrip-button-icon">
+            <MoreVertical className="h-3 w-3" />
+          </button>
         </div>
       </div>
 
@@ -145,9 +145,9 @@ export default function DayView({
                   <p className="text-sm text-muted-foreground">
                     Drop recommendations here or click to add activities
                   </p>
-                  <Button variant="ghost" size="sm" className="mt-2">
+                  <button className="flexitrip-button-ghost-secondary flexitrip-button-compact mt-2">
                     Add Activity
-                  </Button>
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -172,13 +172,12 @@ export default function DayView({
                               )}
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm" 
+                          <button
+                            className="flexitrip-button-ghost-secondary flexitrip-button-compact"
                             onClick={() => onRemoveFromDay?.(rec.id)}
                           >
                             Remove
-                          </Button>
+                          </button>
                         </div>
                       </CardContent>
                     </Card>
@@ -199,12 +198,12 @@ export default function DayView({
               Drag-and-drop itinerary building, time optimization, and multi-day planning will be available in the next update.
             </p>
             <div className="flex items-center justify-center space-x-2">
-              <Button variant="outline" size="sm">
+              <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
                 Add Another Day
-              </Button>
-              <Button variant="outline" size="sm">
+              </button>
+              <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
                 Optimize Schedule
-              </Button>
+              </button>
             </div>
           </div>
         </CardContent>

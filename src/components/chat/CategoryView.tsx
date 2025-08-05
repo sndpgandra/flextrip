@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import ModernCard from '@/components/ui/ModernCard';
+import ModernGrid from '@/components/ui/ModernGrid';
 import RecommendationCard, { RecommendationData } from './RecommendationCard';
 
 interface CategoryViewProps {
@@ -78,7 +80,7 @@ export default function CategoryView({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {Object.entries(categoryLabels).map(([category, config]) => {
         const categoryRecs = groupedRecommendations[category] || [];
         const isExpanded = expandedCategories.has(category);
@@ -86,50 +88,61 @@ export default function CategoryView({
         if (categoryRecs.length === 0) return null;
 
         return (
-          <div key={category} className="space-y-3">
-            {/* Category Header */}
-            <div className="flex items-center justify-between">
+          <div key={category} className="space-y-4">
+            {/* Category Header - Modern Style */}
+            <div className="flex items-center justify-between border-b border-[rgb(var(--border-light))] pb-4">
               <div>
-                <h3 className={`text-xl font-semibold ${config.color}`}>
+                <h3 className="text-2xl font-semibold flexitrip-text-primary mb-1">
                   {config.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">{config.description}</p>
+                <p className="text-sm flexitrip-text-secondary">{config.description}</p>
               </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="text-xs">
-                  {categoryRecs.length} {categoryRecs.length === 1 ? 'option' : 'options'}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
+              <div className="flex items-center space-x-3">
+                <div className="px-3 py-1 bg-[rgb(var(--background-blue-light))] rounded-full border border-[rgb(var(--border-light))]">
+                  <span className="text-sm font-medium text-[rgb(var(--primary-brand))]">
+                    {categoryRecs.length} {categoryRecs.length === 1 ? 'option' : 'options'}
+                  </span>
+                </div>
+                <button
                   onClick={() => toggleCategory(category)}
+                  className="px-4 py-2 text-sm font-medium flexitrip-text-secondary hover:text-[rgb(var(--primary-brand))] transition-colors duration-200"
                 >
-                  {isExpanded ? 'Collapse' : 'Expand'}
-                </Button>
+                  {isExpanded ? 'Show less' : 'Show all'}
+                </button>
               </div>
             </div>
 
-            {/* Category Content */}
+            {/* Category Content - Modern Grid Layout */}
             {isExpanded && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <ModernGrid columns={{ default: 1, sm: 2, md: 3, lg: 4 }} gap="md">
                 {categoryRecs.map((recommendation) => (
-                  <RecommendationCard
+                  <ModernCard
                     key={recommendation.id}
-                    recommendation={recommendation}
-                    onAddToDay={onAddToDay}
+                    id={recommendation.id}
+                    title={recommendation.title}
+                    description={recommendation.description}
+                    rating={recommendation.rating}
+                    duration={recommendation.duration}
+                    price={recommendation.price}
+                    location={recommendation.location}
+                    category={recommendation.category}
+                    ageGroup={recommendation.ageGroup}
+                    accessibility={recommendation.accessibility}
+                    onAddToDay={() => onAddToDay?.(recommendation)}
                     onToggleFavorite={onToggleFavorite}
                     isFavorite={favorites.has(recommendation.id)}
+                    isInItinerary={false} // This will be handled by parent component
                   />
                 ))}
-              </div>
+              </ModernGrid>
             )}
 
             {/* Show More Button for Large Categories */}
             {isExpanded && categoryRecs.length > 6 && (
               <div className="text-center">
-                <Button variant="outline" size="sm">
+                <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
                   Show All ({categoryRecs.length}) {config.title.split(' ')[1]}
-                </Button>
+                </button>
               </div>
             )}
           </div>
@@ -147,9 +160,9 @@ export default function CategoryView({
                   Add your favorite recommendations to days and build your trip timeline.
                 </p>
               </div>
-              <Button size="sm" className="ml-4">
+              <button className="flexitrip-button-primary flexitrip-button-compact ml-4">
                 View Day Planner
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>

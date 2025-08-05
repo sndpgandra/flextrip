@@ -72,14 +72,12 @@ export default function FamilySidebar({
   if (isCollapsed) {
     return (
       <div className="w-12 bg-background border-r p-2 flex flex-col items-center">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <button 
           onClick={onToggleCollapse}
-          className="mb-4"
+          className="flexitrip-button-ghost flexitrip-button-icon mb-4"
         >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <ChevronRight className="h-3 w-3" />
+        </button>
         <div className="flex flex-col items-center space-y-2">
           <Users className="h-5 w-5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">{travelers.length}</span>
@@ -96,9 +94,9 @@ export default function FamilySidebar({
           <Users className="h-5 w-5 text-primary mr-2" />
           <h2 className="font-semibold">Family Group</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={onToggleCollapse}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <button onClick={onToggleCollapse} className="flexitrip-button-ghost flexitrip-button-icon">
+          <ChevronLeft className="h-3 w-3" />
+        </button>
       </div>
 
       {/* Current Trip Context */}
@@ -110,25 +108,23 @@ export default function FamilySidebar({
                 <p className="text-sm font-medium text-blue-900">Current Trip</p>
                 <p className="text-xs text-blue-700">{currentTripTitle}</p>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <button 
                 onClick={onNewTrip}
-                className="text-blue-700 border-blue-300"
+                className="flexitrip-button-ghost-secondary flexitrip-button-compact"
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
                 New Trip
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Add Traveler Button */}
-      <Button onClick={onAddTraveler} className="mb-4 w-full">
-        <Plus className="h-4 w-4 mr-2" />
+      <button onClick={onAddTraveler} className="flexitrip-button-primary flexitrip-button-compact mb-4 w-full">
+        <Plus className="h-3 w-3 mr-2" />
         Add Family Member
-      </Button>
+      </button>
 
       {/* Travelers List */}
       <div className="flex-1 overflow-y-auto space-y-3">
@@ -157,22 +153,18 @@ export default function FamilySidebar({
                     </p>
                   </div>
                   <div className="flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
+                    <button
+                      className="flexitrip-button-ghost-secondary flexitrip-button-icon"
                       onClick={() => onEditTraveler(traveler)}
                     >
                       <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-destructive"
+                    </button>
+                    <button
+                      className="flexitrip-button-ghost-secondary flexitrip-button-icon text-red-500 hover:text-white hover:bg-red-500"
                       onClick={() => setShowConfirmDelete(traveler.id)}
                     >
                       <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -232,20 +224,18 @@ export default function FamilySidebar({
                     <div className="text-center p-4">
                       <p className="text-sm mb-3">Remove {traveler.name}?</p>
                       <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="destructive"
+                        <button
+                          className="flexitrip-button-compact bg-red-500 hover:bg-red-600 text-white border-0"
                           onClick={() => handleDeleteConfirm(traveler.id)}
                         >
                           Remove
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
+                        </button>
+                        <button
+                          className="flexitrip-button-ghost-secondary flexitrip-button-compact"
                           onClick={() => setShowConfirmDelete(null)}
                         >
                           Cancel
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -260,10 +250,10 @@ export default function FamilySidebar({
       <div className="mt-4 pt-4 border-t">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{travelers.length} {travelers.length === 1 ? 'person' : 'people'}</span>
-          <Button variant="ghost" size="sm">
+          <button className="flexitrip-button-ghost-secondary flexitrip-button-compact">
             <Settings className="h-3 w-3 mr-1" />
             Preferences
-          </Button>
+          </button>
         </div>
       </div>
     </div>

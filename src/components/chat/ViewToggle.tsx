@@ -35,63 +35,53 @@ export default function ViewToggle({
       <CardContent className="py-3">
         <div className="flex items-center justify-between">
           {/* View Toggle Buttons */}
-          <div className="flex items-center bg-white rounded-lg p-1 shadow-sm">
-            <Button
-              variant={currentView === 'category' ? 'default' : 'ghost'}
-              size="sm"
+          <div className="flex items-center bg-white rounded-full p-1 shadow-sm">
+            <button
               onClick={() => onViewChange('category')}
-              className="flex items-center space-x-2"
+              className={`flexitrip-button-filter flexitrip-button-compact ${currentView === 'category' ? 'active' : ''}`}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-3 w-3" />
               <span>Category View</span>
-            </Button>
-            <Button
-              variant={currentView === 'day' ? 'default' : 'ghost'}
-              size="sm"
+            </button>
+            <button
               onClick={() => onViewChange('day')}
-              className="flex items-center space-x-2"
+              className={`flexitrip-button-filter flexitrip-button-compact ${currentView === 'day' ? 'active' : ''} ${!hasRecommendations ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={!hasRecommendations}
             >
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3 w-3" />
               <span>Day View</span>
-            </Button>
+            </button>
           </div>
 
           {/* Action Buttons */}
           {hasRecommendations && (
             <div className="flex items-center space-x-2">
               {onSave && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={onSave}
-                  className="flex items-center space-x-1"
+                  className="flexitrip-button-ghost-secondary flexitrip-button-compact flex items-center space-x-1"
                 >
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3 w-3" />
                   <span className="hidden sm:inline">Save</span>
-                </Button>
+                </button>
               )}
               {onExport && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={onExport}
-                  className="flex items-center space-x-1"
+                  className="flexitrip-button-ghost-secondary flexitrip-button-compact flex items-center space-x-1"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-3 w-3" />
                   <span className="hidden sm:inline">Export</span>
-                </Button>
+                </button>
               )}
               {onShare && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={onShare}
-                  className="flex items-center space-x-1"
+                  className="flexitrip-button-ghost-secondary flexitrip-button-compact flex items-center space-x-1"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-3 w-3" />
                   <span className="hidden sm:inline">Share</span>
-                </Button>
+                </button>
               )}
             </div>
           )}
