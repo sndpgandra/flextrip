@@ -92,8 +92,8 @@ export default function HomePage() {
             </div>
             <h3 className="text-xl font-semibold">Tell Us About Your Family</h3>
             <p className="text-muted-foreground">
-              Add your family members as you chat. Share ages, interests, and preferences 
-              when relevant - no lengthy forms required.
+              Use our integrated sidebar to add family members, set preferences, and 
+              configure cultural settings - all while chatting naturally with our AI.
             </p>
           </div>
           

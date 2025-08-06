@@ -114,7 +114,7 @@ export default function CategoryView({
 
             {/* Category Content - Modern Grid Layout */}
             {isExpanded && (
-              <ModernGrid columns={{ default: 1, sm: 2, md: 3, lg: 4 }} gap="md">
+              <ModernGrid columns={{ default: 1, sm: 1, md: 2, lg: 3, xl: 3 }} gap="lg">
                 {categoryRecs.map((recommendation) => (
                   <ModernCard
                     key={recommendation.id}

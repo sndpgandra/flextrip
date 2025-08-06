@@ -327,7 +327,7 @@ Based on this context, please provide personalized recommendations that consider
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 4000, // Increased further to prevent truncation
+        max_tokens: 6000, // Increased to accommodate 8-12 recommendations
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.1,
@@ -399,11 +399,11 @@ CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not inc
 MANDATORY RULES:
 1. Response must be ONLY valid JSON - no extra text
 2. Use only these categories: "attraction", "restaurant", "transport", "accommodation"
-3. Include 3-5 specific, real places in structured_recommendations (fewer items for reliability)
+3. Include 8-12 specific, real places in structured_recommendations for comprehensive options
 4. Each title must be an actual place name (not description)
 5. Escape quotes in descriptions using backslash
 6. Keep descriptions under 80 characters to prevent truncation
-7. Keep conversational_response under 300 characters
+7. Keep conversational_response under 400 characters
 8. End JSON with proper closing braces - ensure complete response
 9. CRITICAL: Complete the JSON properly - do not let it get cut off
 

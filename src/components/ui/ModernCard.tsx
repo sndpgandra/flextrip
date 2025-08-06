@@ -128,16 +128,16 @@ export default function ModernCard({
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
+          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
             {title}
           </h3>
           {rating && (
             <div className="flex items-center space-x-1 flex-shrink-0">
-              <Star className="h-4 w-4 text-yellow-400 fill-current" />
-              <span className="text-sm font-medium text-gray-700">{rating}</span>
+              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+              <span className="text-xs font-medium text-gray-700">{rating}</span>
             </div>
           )}
         </div>
@@ -146,26 +146,26 @@ export default function ModernCard({
         {location && (
           <div className="flex items-center space-x-1 mb-2">
             <MapPin className="h-3 w-3 text-gray-400" />
-            <span className="text-sm text-gray-600 line-clamp-1">{location}</span>
+            <span className="text-xs text-gray-600 line-clamp-1">{location}</span>
           </div>
         )}
 
         {/* Description */}
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{description}</p>
+        <p className="text-xs text-gray-600 line-clamp-2 mb-3">{description}</p>
 
         {/* Metadata Row */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+          <div className="flex items-center space-x-2">
             {duration && (
               <div className="flex items-center space-x-1">
                 <Clock className="h-3 w-3" />
-                <span>{duration}</span>
+                <span className="text-xs">{duration}</span>
               </div>
             )}
             {price && (
               <div className="flex items-center space-x-1">
                 <DollarSign className="h-3 w-3" />
-                <span>{price}</span>
+                <span className="text-xs">{price}</span>
               </div>
             )}
           </div>
@@ -173,11 +173,11 @@ export default function ModernCard({
 
         {/* Age Groups */}
         {ageGroup.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="flex flex-wrap gap-1 mb-2">
             {ageGroup.map((age, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-[rgb(var(--background-blue-light))] text-[rgb(var(--primary-brand))] text-xs rounded-full border border-[rgb(var(--primary-light))]/30"
+                className="px-1.5 py-0.5 bg-[rgb(var(--background-blue-light))] text-[rgb(var(--primary-brand))] text-xs rounded-full border border-[rgb(var(--primary-light))]/30"
               >
                 {age}
               </span>
@@ -187,7 +187,7 @@ export default function ModernCard({
 
         {/* Accessibility */}
         {accessibility && (
-          <div className="text-xs text-[rgb(var(--accent-violet))] mb-3">
+          <div className="text-xs text-[rgb(var(--accent-violet))] mb-2">
             ♿ {accessibility}
           </div>
         )}

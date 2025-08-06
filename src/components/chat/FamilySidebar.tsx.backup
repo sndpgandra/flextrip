@@ -55,7 +55,7 @@ interface FamilySidebarProps {
   onTravelPreferencesChange: (preferences: TravelPreferences) => void;
   culturalSettings: CulturalSettings;
   onCulturalSettingsChange: (settings: CulturalSettings) => void;
-  travelContext: any;
+  travelContext: any; // Travel context from hook
   onUpdateContext: (updates: {
     newTravelers?: any[];
     updatedTravelers?: Traveler[];
@@ -290,7 +290,7 @@ export default function FamilySidebar({
               <Users className="h-4 w-4 text-primary mr-2" />
               <span className="font-medium">Family Group</span>
               <Badge variant="outline" className="ml-2">
-                {getAllTravelers().length}
+                {travelers.length}
               </Badge>
             </div>
             {expandedSections.family ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -483,7 +483,7 @@ export default function FamilySidebar({
                           <div className="mb-2">
                             <p className="text-xs text-muted-foreground mb-1">Interests:</p>
                             <div className="flex flex-wrap gap-1">
-                              {traveler.interests.slice(0, 2).map((interest: string) => (
+                              {traveler.interests.slice(0, 2).map((interest) => (
                                 <Badge key={interest} variant="outline" className="text-xs">
                                   {interest}
                                 </Badge>
@@ -497,32 +497,31 @@ export default function FamilySidebar({
                           </div>
                         )}
 
-                        {/* Delete Confirmation */}
-                        {showConfirmDelete === traveler.id && (
-                          <div className="absolute inset-0 bg-background/95 flex items-center justify-center rounded-lg">
-                            <div className="text-center p-2">
-                              <p className="text-sm mb-2">Remove {traveler.name}?</p>
-                              <div className="flex space-x-2 justify-center">
-                                <button
-                                  className="flexitrip-button-compact bg-red-500 hover:bg-red-600 text-white border-0"
-                                  onClick={() => handleDeleteConfirm(traveler.id)}
-                                >
-                                  Remove
-                                </button>
-                                <button
-                                  className="flexitrip-button-ghost-secondary flexitrip-button-compact"
-                                  onClick={() => setShowConfirmDelete(null)}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
+                      {/* Delete Confirmation */}
+                      {showConfirmDelete === traveler.id && (
+                        <div className="absolute inset-0 bg-background/95 flex items-center justify-center rounded-lg">
+                          <div className="text-center p-2">
+                            <p className="text-sm mb-2">Remove {traveler.name}?</p>
+                            <div className="flex space-x-2 justify-center">
+                              <button
+                                className="flexitrip-button-compact bg-red-500 hover:bg-red-600 text-white border-0"
+                                onClick={() => handleDeleteConfirm(traveler.id)}
+                              >
+                                Remove
+                              </button>
+                              <button
+                                className="flexitrip-button-ghost-secondary flexitrip-button-compact"
+                                onClick={() => setShowConfirmDelete(null)}
+                              >
+                                Cancel
+                              </button>
                             </div>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )
-                })
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
               )}
             </div>
           )}
