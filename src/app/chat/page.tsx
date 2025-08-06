@@ -31,11 +31,7 @@ export default function ChatPage() {
         setSessionId(result.data.sessionId);
         setTravelers(result.data.travelers);
         
-        // If no travelers, redirect to onboarding
-        if (result.data.travelers.length === 0) {
-          router.push('/onboarding');
-          return;
-        }
+        // Allow empty state - users can add travelers via sidebar
       } else {
         setError('Failed to load session data');
       }
@@ -97,11 +93,13 @@ export default function ChatPage() {
   };
 
   const handleAddTraveler = () => {
-    router.push('/onboarding?mode=add');
+    // Handled by inline sidebar form
+    console.log('Add traveler triggered from sidebar');
   };
 
   const handleEditTraveler = (traveler: Traveler) => {
-    router.push(`/onboarding?mode=edit&id=${traveler.id}`);
+    // Handled by inline sidebar form
+    console.log('Edit traveler triggered from sidebar', traveler);
   };
 
   const handleRemoveTraveler = async (travelerId: string) => {
@@ -157,28 +155,7 @@ export default function ChatPage() {
     );
   }
 
-  if (travelers.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="h-6 w-6 mr-2" />
-              No Travelers Found
-            </CardTitle>
-            <CardDescription>
-              You need to set up your family profile before you can start planning trips.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push('/onboarding')}>
-              Set Up Family Profile
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Remove empty state blocking - allow direct access to chat interface
 
   return (
     <ChatInterface
@@ -192,6 +169,7 @@ export default function ChatPage() {
       onRemoveTraveler={handleRemoveTraveler}
       onNewTrip={handleNewTrip}
       currentTripTitle={currentTripTitle}
+      onUpdateTravelers={setTravelers}
     />
   );
 }

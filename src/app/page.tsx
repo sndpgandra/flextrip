@@ -19,7 +19,7 @@ export default function HomePage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" className="text-lg px-8 py-6">
-            <Link href="/onboarding">Start Planning Your Trip</Link>
+            <Link href="/chat">Start Planning Your Trip</Link>
           </Button>
           <Button variant="outline" size="lg" className="text-lg px-8 py-6">
             Learn More
@@ -92,8 +92,8 @@ export default function HomePage() {
             </div>
             <h3 className="text-xl font-semibold">Tell Us About Your Family</h3>
             <p className="text-muted-foreground">
-              Quick questions about ages, interests, mobility, and preferences. 
-              Takes less than 5 minutes.
+              Add your family members as you chat. Share ages, interests, and preferences 
+              when relevant - no lengthy forms required.
             </p>
           </div>
           
@@ -128,7 +128,7 @@ export default function HomePage() {
           Join families who&apos;ve discovered stress-free travel planning with FlexiTrip.
         </p>
         <Button asChild size="lg" className="text-lg px-8 py-6">
-          <Link href="/onboarding">Start Your Free Trip Planning</Link>
+          <Link href="/chat">Start Your Free Trip Planning</Link>
         </Button>
       </div>
     </main>

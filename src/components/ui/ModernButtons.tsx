@@ -153,7 +153,7 @@ export function ButtonShowcase() {
         Save Progress
       </StickyButton>
       
-      <FloatingButton />
+      <FloatingButton>Float</FloatingButton>
     </div>
   );
 }

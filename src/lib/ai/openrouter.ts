@@ -111,6 +111,85 @@ export class OpenRouterAI {
     }
   }
 
+  // Enhanced method with travel context
+  async generateResponseWithContext(
+    messages: ChatMessage[], 
+    travelers: Traveler[], 
+    travelContext?: string,
+    preferences?: any,
+    culturalSettings?: any
+  ): Promise<{
+    content: string;
+    model: string;
+    tokens?: number;
+    structured_recommendations?: any[];
+  }> {
+    // If we have travel context, use it; otherwise fall back to the original method
+    if (!travelContext || travelContext.trim().length === 0) {
+      return this.generateResponse(messages, travelers);
+    }
+
+    // Build enhanced system prompt with travel context
+    const baseSystemPrompt = this.buildAgeAwarePrompt(travelers);
+    const enhancedSystemPrompt = `${baseSystemPrompt}
+
+CURRENT TRAVEL CONTEXT:
+${travelContext}
+
+Based on this context, please provide personalized recommendations that consider all family members' needs, preferences, and constraints. Always include specific details about accessibility, age-appropriateness, and timing recommendations.`;
+
+    const requestMessages = [
+      { role: 'system', content: enhancedSystemPrompt },
+      ...messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }))
+    ];
+
+    try {
+      // Primary model: openrouter/horizon-beta
+      const response = await this.callModel('openrouter/horizon-beta', requestMessages);
+      
+      const rawContent = response.choices[0].message.content;
+      
+      // Log the raw response for debugging
+      console.log('Enhanced AI response length:', rawContent.length);
+      console.log('Travel context used:', travelContext.substring(0, 200) + '...');
+      
+      // Try to parse structured JSON response
+      const parsedResponse = this.parseStructuredResponse(rawContent);
+      
+      return {
+        content: parsedResponse.conversational_response || rawContent,
+        model: response.model,
+        tokens: response.usage?.total_tokens,
+        structured_recommendations: parsedResponse.structured_recommendations
+      };
+    } catch (error) {
+      console.warn('Enhanced request failed, falling back to Claude 3.5 Sonnet:', error);
+
+      try {
+        // Secondary model: Claude 3.5 Sonnet
+        const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+        
+        const rawContent = response.choices[0].message.content;
+        const parsedResponse = this.parseStructuredResponse(rawContent);
+        
+        return {
+          content: parsedResponse.conversational_response || rawContent,
+          model: response.model,
+          tokens: response.usage?.total_tokens,
+          structured_recommendations: parsedResponse.structured_recommendations
+        };
+      } catch (fallbackError) {
+        console.error('All AI models failed with enhanced context:', fallbackError);
+        // Final fallback to original method without context
+        console.log('Falling back to original generateResponse method...');
+        return this.generateResponse(messages, travelers);
+      }
+    }
+  }
+
   private parseStructuredResponse(content: string): {
     conversational_response?: string;
     structured_recommendations?: any[];

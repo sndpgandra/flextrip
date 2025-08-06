@@ -183,10 +183,10 @@ Here are some recommendations:
 
 ### 4. Modern Visual Design System
 
-#### Color Palette (Inspired by Airbnb/Booking.com)
+#### Color Palette 
 ```css
 Primary Colors:
-- Brand Blue: #FF385C (Airbnb-inspired)
+- Brand Blue: #FF385C (inspired)
 - Background: #FFFFFF (Clean white)
 - Text Primary: #222222 (Dark gray)
 - Text Secondary: #717171 (Medium gray)
@@ -499,15 +499,15 @@ This plan transforms FlexiTrip from a basic chat interface to a modern, dual-vie
 
 ---
 
-# 🎨 AIRBNB-INSPIRED UI REDESIGN PLAN
+# 🎨 INSPIRED UI REDESIGN PLAN
 
-Based on detailed analysis of Airbnb's design system, this section outlines a complete UI transformation to achieve a modern, professional travel app experience.
+Based on detailed analysis of design system, this section outlines a complete UI transformation to achieve a modern, professional travel app experience.
 
-## 🔍 Airbnb Design System Analysis
+## 🔍  Design System Analysis
 
 ### Typography Foundation
 ```css
-/* Primary Font Stack (Airbnb-inspired) */
+/* Primary Font Stack () */
 font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 
 /* Type Scale */
@@ -532,10 +532,10 @@ font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Se
 --leading-relaxed: 1.7; /* Large paragraphs */
 ```
 
-### Color Palette (Airbnb-Inspired)
+### Color Palette ()
 ```css
 /* Primary Colors */
---color-primary: #FF385C;        /* Airbnb Rausch - CTAs, links */
+--color-primary: #FF385C;        /*  Rausch - CTAs, links */
 --color-primary-dark: #E31C5F;   /* Hover states */
 --color-primary-light: #FFE8EC;  /* Light backgrounds */
 
@@ -611,7 +611,7 @@ font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Se
 
 ## 🎯 New Layout Architecture
 
-### 1. Top Search Bar (Airbnb-Style)
+### 1. Top Search Bar (Style)
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  🧳 FlexiTrip                                           👤 Profile  🔔       │
@@ -652,7 +652,7 @@ font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Se
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Recommendation Card Design (Airbnb-Style)
+### 3. Recommendation Card Design (-Style)
 ```css
 .recommendation-card {
   /* Card Container */
@@ -863,7 +863,7 @@ font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Se
 }
 ```
 
-## 🔄 Category Tabs (Airbnb-Style)
+## 🔄 Category Tabs (-Style)
 
 ### Tab Navigation
 ```css
@@ -1005,4 +1005,468 @@ font-family: 'Inter', 'Airbnb Cereal VF', -apple-system, BlinkMacSystemFont, 'Se
 - **Mobile Usability**: +50% better mobile experience
 - **Conversion Rate**: +35% more trip saves/bookings
 
-This Airbnb-inspired redesign transforms FlexiTrip into a modern, professional travel platform that users will love to use. The focus on visual hierarchy, responsive design, and intuitive interactions creates an experience that rivals the best travel websites in the industry.
+This -inspired redesign transforms FlexiTrip into a modern, professional travel platform that users will love to use. The focus on visual hierarchy, responsive design, and intuitive interactions creates an experience that rivals the best travel websites in the industry.
+
+---
+
+# 🔄 ONBOARDING REMOVAL & SIDEBAR INTEGRATION PLAN
+
+This section outlines the comprehensive plan to remove the separate onboarding flow and integrate all questions into the left sidebar for a seamless user experience.
+
+## 📊 Current State Analysis
+
+### Existing Onboarding Structure
+The current system uses a 4-step wizard approach:
+
+1. **Traveler Count** - Select number of people (1-8)
+2. **Traveler Details** - Name, age, relationship, mobility, interests
+3. **Preferences** - Cultural background, dietary restrictions
+4. **Review** - Confirmation before saving
+
+### Current Navigation Flow
+```
+Home Page → Onboarding (4 steps) → Chat Interface
+     ↓
+   Missing travelers → Redirect to Onboarding
+```
+
+### Data Structure Currently Captured
+```typescript
+interface OnboardingData {
+  traveler_count: number;
+  travelers: Partial<Traveler>[];
+  cultural_preferences: string[];
+  completed: boolean;
+}
+
+interface Traveler {
+  id: string;
+  session_id: string;
+  name: string;
+  age: number;
+  mobility: 'high' | 'medium' | 'low';
+  relationship?: string;
+  interests?: string[];
+  cultural_background?: string;
+  dietary_restrictions?: string[];
+}
+```
+
+## 🎯 New Integrated Sidebar Design
+
+### Proposed Layout Structure
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Header (FlexiTrip Logo)                     │
+├───────────────┬─────────────────────────────────────────────────┤
+│               │                                                 │
+│   Enhanced    │              Main Chat Interface                │
+│   Sidebar     │                                                 │
+│   (320px)     │  ┌─────────────────────────────────────────┐   │
+│               │  │          AI Conversation               │   │
+│ ┌───────────┐ │  │     (No Search Bar on Top)            │   │
+│ │  Family   │ │  │                                       │   │
+│ │  Group    │ │  │  ┌─────────────────────────────────┐  │   │
+│ │  (Current)│ │  │  │      Recommendation Cards      │  │   │
+│ └───────────┘ │  │  │   (Category/Day Toggle View)   │  │   │
+│               │  │  └─────────────────────────────────┘  │   │
+│ ┌───────────┐ │  │                                       │   │
+│ │  Travel   │ │  │  ┌─────────────────────────────────┐  │   │
+│ │Preferences│ │  │  │        Message Input           │  │   │
+│ │   (NEW)   │ │  │  │         & Send Button          │  │   │
+│ └───────────┘ │  │  └─────────────────────────────────┘  │   │
+│               │  └─────────────────────────────────────────┘   │
+│ ┌───────────┐ │                                                 │
+│ │ Cultural  │ │                                                 │
+│ │ Settings  │ │                                                 │
+│ │   (NEW)   │ │                                                 │
+│ └───────────┘ │                                                 │
+│               │                                                 │
+│ ┌───────────┐ │                                                 │
+│ │   Trip    │ │                                                 │
+│ │Management │ │                                                 │
+│ │ (Existing)│ │                                                 │
+│ └───────────┘ │                                                 │
+│               │                                                 │
+└───────────────┴─────────────────────────────────────────────────┘
+```
+
+### Sidebar Section Details
+
+#### 1. Family Group (Enhanced - Existing + New Features)
+```
+┌─────────────────────────────────────┐
+│ 👥 Family Group                    │
+│ ─────────────────────────────────── │
+│                                     │
+│ 👤 John Doe (45) - Myself           │
+│ Father • High Mobility               │
+│ 🎯 Sports, History                  │
+│ [Edit] [Remove]                     │
+│ ─────────────────────────────────── │
+│ 👤 Sarah Doe (42) - Spouse          │
+│ Mother • High Mobility               │
+│ 🥗 Vegetarian                       │
+│ [Edit] [Remove]                     │
+│ ─────────────────────────────────── │
+│ 👶 Emma Doe (8) - Child             │
+│ Daughter • High Mobility             │
+│ 🎯 Animals, Playgrounds             │
+│ [Edit] [Remove]                     │
+│ ─────────────────────────────────── │
+│ [+ Add Family Member]               │
+│                                     │
+│ Family Summary: 3 people            │
+│ Ages: 8-45 • Mixed interests        │
+│ Special needs: Vegetarian options   │
+└─────────────────────────────────────┘
+```
+
+**Features:**
+- Inline traveler creation (no separate page needed)
+- Quick edit forms that expand in-place
+- Smart age-based question filtering
+- Real-time family summary generation
+
+#### 2. Travel Preferences (NEW Section)
+```
+┌─────────────────────────────────────┐
+│ 🗺️ Travel Preferences              │
+│ ─────────────────────────────────── │
+│                                     │
+│ 📍 Destination                      │
+│ [Search destinations...]            │
+│ 🔍 San Francisco, CA                │
+│                                     │
+│ 📅 Travel Dates                     │
+│ From: [MM/DD/YYYY]                  │
+│ To:   [MM/DD/YYYY]                  │
+│                                     │
+│ 💰 Budget Range (Optional)          │
+│ [$ Budget friendly] [$$] [$$$ Luxury]│
+│                                     │
+│ 🎯 Trip Type                        │
+│ ☐ Family bonding                    │
+│ ☐ Educational                       │
+│ ☐ Adventure                         │
+│ ☐ Relaxation                        │
+│ ☐ Cultural exploration             │
+└─────────────────────────────────────┘
+```
+
+**Features:**
+- Destination search with suggestions
+- Date picker integration
+- Budget and trip type preferences
+- Replaces the top search bar functionality
+
+#### 3. Cultural Settings (NEW Section)
+```
+┌─────────────────────────────────────┐
+│ 🌍 Cultural Settings               │
+│ ─────────────────────────────────── │
+│                                     │
+│ Cultural Background (Optional)       │
+│ ☐ Indian      ☐ Chinese             │
+│ ☐ Middle Eastern ☐ Italian          │
+│ ☐ Mexican     ☐ Western             │
+│ ☐ Other                             │
+│                                     │
+│ 🍽️ Dietary Restrictions            │
+│ ☐ Vegetarian   ☐ Vegan              │
+│ ☐ Halal       ☐ Kosher              │
+│ ☐ Gluten-free ☐ Dairy-free         │
+│ ☐ Nut-free                          │
+│                                     │
+│ 🏛️ Interests (Family-wide)          │
+│ ☐ Museums     ☐ Nature              │
+│ ☐ History     ☐ Art & Culture       │
+│ ☐ Adventure   ☐ Food & Dining       │
+│ ☐ Shopping    ☐ Entertainment       │
+└─────────────────────────────────────┘
+```
+
+**Features:**
+- Family-wide preferences
+- Cultural and dietary considerations
+- Interest-based recommendations
+- Applies to entire family group
+
+#### 4. Trip Management (Enhanced Existing)
+```
+┌─────────────────────────────────────┐
+│ 💾 Trip Management                  │
+│ ─────────────────────────────────── │
+│                                     │
+│ Current Trip: San Francisco Family   │
+│ 📅 Dec 15-18, 2024                  │
+│ 👥 3 people                         │
+│ 💬 12 messages                      │
+│                                     │
+│ [💾 Save Trip]    [🔄 New Trip]     │
+│                                     │
+│ Recent Trips:                       │
+│ • Las Vegas Family (Nov 2024)       │
+│ • NYC Weekend (Oct 2024)            │
+│                                     │
+│ [📋 View All Trips]                 │
+└─────────────────────────────────────┘
+```
+
+## 🔄 Context Integration for LLM
+
+### Automatic Context Building
+The system will automatically build comprehensive context for LLM prompts using sidebar data:
+
+```typescript
+// Generated context example
+interface TravelContext {
+  // From Family Group
+  travelers: {
+    adults: 2,
+    children: 1,
+    seniors: 0,
+    totalCount: 3,
+    ageRange: "8-45 years",
+    mobilityNeeds: ["high mobility for all"],
+    childrenAges: [8],
+    adultInterests: ["sports", "history"],
+    childrenInterests: ["animals", "playgrounds"]
+  },
+  
+  // From Travel Preferences  
+  destination: "San Francisco, CA",
+  dates: {
+    checkin: "2024-12-15",
+    checkout: "2024-12-18", 
+    duration: "4 days"
+  },
+  tripType: ["family bonding", "educational"],
+  budget: "moderate",
+  
+  // From Cultural Settings
+  culturalBackground: ["western"],
+  dietaryRestrictions: ["vegetarian options needed"],
+  familyInterests: ["museums", "nature", "history"],
+  
+  // Generated insights
+  recommendations: {
+    needsChildFriendly: true,
+    needsVegetarianOptions: true,
+    focusAreas: ["educational attractions", "outdoor activities"],
+    avoidAreas: ["late night entertainment", "strenuous hiking"]
+  }
+}
+```
+
+### Enhanced Prompt Generation
+```typescript
+const buildContextPrompt = (travelContext: TravelContext) => {
+  return `You are helping plan a family trip with the following context:
+
+FAMILY GROUP:
+- ${travelContext.travelers.totalCount} travelers (${travelContext.travelers.adults} adults, ${travelContext.travelers.children} children)
+- Age range: ${travelContext.travelers.ageRange}
+- Children's interests: ${travelContext.travelers.childrenInterests.join(', ')}
+- Adult interests: ${travelContext.travelers.adultInterests.join(', ')}
+
+TRIP DETAILS:
+- Destination: ${travelContext.destination}
+- Duration: ${travelContext.dates.duration} 
+- Trip focus: ${travelContext.tripType.join(' and ')}
+- Budget: ${travelContext.budget}
+
+SPECIAL CONSIDERATIONS:
+- Dietary needs: ${travelContext.dietaryRestrictions.join(', ')}
+- Cultural preferences: ${travelContext.culturalBackground.join(', ')}
+- Family interests: ${travelContext.familyInterests.join(', ')}
+
+Please provide recommendations that work well for this multi-generational group with age-appropriate activities for everyone.`;
+};
+```
+
+## 📋 Implementation Roadmap
+
+### Phase 1: Navigation & Structure Updates (Week 1)
+**Goal**: Make chat page directly accessible and remove onboarding redirects
+
+1. **Update Home Page Navigation** 
+   - File: `src/app/page.tsx`
+   - Change CTA buttons to link to `/chat` instead of `/onboarding`
+   - Update hero section messaging
+
+2. **Remove Onboarding Redirects**
+   - File: `src/app/chat/page.tsx`
+   - Remove traveler count check and onboarding redirect (lines 34-38)
+   - Allow empty state with inline family creation
+
+3. **Layout Structure Prep**
+   - Expand sidebar width from 280px to 320px
+   - Remove search bar from main chat area
+   - Prepare space for new sidebar sections
+
+### Phase 2: Enhanced Sidebar Components (Week 2)
+**Goal**: Create integrated question experience in sidebar
+
+4. **Enhance Family Sidebar**
+   - File: `src/components/chat/FamilySidebar.tsx`
+   - Add inline traveler creation forms
+   - Implement expandable edit interfaces
+   - Add smart age-based question logic
+   - Create family summary component
+
+5. **Create Travel Preferences Panel**
+   - New file: `src/components/sidebar/TravelPreferences.tsx`
+   - Destination search with autocomplete
+   - Date picker integration
+   - Budget and trip type selectors
+   - Replace search bar functionality
+
+6. **Create Cultural Settings Panel**
+   - New file: `src/components/sidebar/CulturalSettings.tsx`
+   - Cultural background checkboxes
+   - Dietary restrictions multi-select
+   - Family-wide interests selector
+
+### Phase 3: Context System & Integration (Week 3)
+**Goal**: Intelligent context building and LLM integration
+
+7. **Implement Travel Context Hook**
+   - New file: `src/hooks/useTravelContext.ts`
+   - Aggregate data from all sidebar sections
+   - Generate structured context for LLM
+   - Provide real-time context updates
+
+8. **Update Chat Interface**
+   - File: `src/components/chat/ChatInterface.tsx`
+   - Integrate context hook
+   - Remove search bar dependencies
+   - Update message handling with context
+
+9. **Enhance AI Integration**
+   - File: `src/lib/ai/openrouter.ts`
+   - Update prompt generation with context
+   - Improve recommendation parsing
+   - Add context-aware suggestions
+
+### Phase 4: Cleanup & Polish (Week 4)
+**Goal**: Remove old code and optimize experience
+
+10. **Remove Onboarding Components**
+    - Delete: `src/app/onboarding/page.tsx`
+    - Delete: `src/components/onboarding/OnboardingWizard.tsx`
+    - Clean up unused imports and references
+
+11. **Update API Routes** 
+    - Review: `src/app/api/travelers/route.ts`
+    - Optimize for inline creation
+    - Add batch operations if needed
+
+12. **Testing & Optimization**
+    - Test complete user flow from home to chat
+    - Verify context building works correctly
+    - Optimize sidebar performance
+    - Add loading states and error handling
+
+## 🎨 Screen Layout Changes
+
+### Before: Current Layout with Top Search Bar
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     FlexiTrip Header                           │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ 🔍 [Where] [Check-in] [Check-out] [Search Button]        │  │ ← Remove This
+│  │     Popular: [Family-friendly] [Beach] [City] [Adventure] │  │
+│  └───────────────────────────────────────────────────────────┘  │
+├───────────────┬─────────────────────────────────────────────────┤
+│ Family        │                                                 │
+│ Sidebar       │              Chat Messages                      │
+│ (280px)       │                                                 │
+│               │                                                 │
+│ - Travelers   │                                                 │
+│ - Trip Mgmt   │                                                 │
+└───────────────┴─────────────────────────────────────────────────┘
+```
+
+### After: New Integrated Sidebar Layout
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     FlexiTrip Header                           │
+├───────────────┬─────────────────────────────────────────────────┤
+│ Enhanced      │                                                 │
+│ Sidebar       │         Full Chat Interface                     │
+│ (320px)       │         (More Space Available)                 │
+│               │                                                 │
+│ ┌───────────┐ │  ┌─────────────────────────────────────────┐   │
+│ │Family     │ │  │            AI Conversation             │   │
+│ │Group      │ │  │                                       │   │
+│ │+ Add New  │ │  │  ┌─────────────────────────────────┐  │   │
+│ └───────────┘ │  │  │    Recommendation Cards        │  │   │
+│               │  │  │                                 │  │   │
+│ ┌───────────┐ │  │  └─────────────────────────────────┘  │   │
+│ │Travel     │ │  │                                       │   │
+│ │Preferences│ │  │  ┌─────────────────────────────────┐  │   │
+│ │🗺️📅💰    │ │  │  │        Message Input           │  │   │
+│ └───────────┘ │  │  └─────────────────────────────────┘  │   │
+│               │  └─────────────────────────────────────────┘   │
+│ ┌───────────┐ │                                                 │
+│ │Cultural   │ │  Context automatically built from sidebar       │
+│ │Settings   │ │  and sent with each message to AI              │
+│ │🌍🍽️      │ │                                                 │
+│ └───────────┘ │                                                 │
+│               │                                                 │
+│ ┌───────────┐ │                                                 │
+│ │Trip       │ │                                                 │
+│ │Management │ │                                                 │
+│ │💾🔄       │ │                                                 │
+│ └───────────┘ │                                                 │
+└───────────────┴─────────────────────────────────────────────────┘
+```
+
+### Key Layout Benefits
+
+1. **More Chat Space**: Removing the top search bar gives more vertical space for conversation
+2. **Integrated Experience**: All questions accessible without leaving chat interface  
+3. **Progressive Disclosure**: Users can fill information as needed, not required upfront
+4. **Context Awareness**: AI always has access to current family and preference data
+5. **Mobile Friendly**: Sidebar can collapse on mobile, search functionality preserved
+
+## 📊 User Experience Flow
+
+### New User Journey
+```
+1. Home Page → Click "Start Planning"
+      ↓
+2. Chat Page (Empty State)
+   - Shows welcome message
+   - Sidebar prompts to add family members
+   - Can start chatting immediately or fill details first
+      ↓
+3. Progressive Information Gathering
+   - User adds family members as needed
+   - Sets preferences when relevant
+   - AI requests missing info contextually
+      ↓  
+4. Rich Contextual Conversations
+   - Every message includes family context
+   - Recommendations automatically personalized
+   - No need to repeat family details
+```
+
+### Returning User Journey  
+```
+1. Home Page → Click "Continue Planning"
+      ↓
+2. Chat Page (With Saved Context)
+   - Previous family data loaded
+   - Can immediately start new conversation
+   - All preferences preserved
+      ↓
+3. Instant Personalized Experience
+   - AI remembers family composition
+   - Recommendations match preferences
+   - Seamless continuation of planning
+```
+
+This comprehensive plan eliminates the friction of separate onboarding while preserving all the detailed family information needed for personalized recommendations. The integrated sidebar approach makes FlexiTrip more user-friendly and efficient.

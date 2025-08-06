@@ -9,8 +9,9 @@ import type { ChatMessage, Traveler } from '@/types';
 import { RecommendationData } from './RecommendationCard';
 import MessageList from './MessageList';
 import FamilySidebar from './FamilySidebar';
-import SearchBar from '@/components/ui/SearchBar';
+// SearchBar removed - functionality moved to sidebar
 import Logo from '@/components/ui/Logo';
+import { useTravelContext } from '@/hooks/useTravelContext';
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -23,6 +24,7 @@ interface ChatInterfaceProps {
   onRemoveTraveler?: (travelerId: string) => void;
   onNewTrip?: () => void;
   currentTripTitle?: string;
+  onUpdateTravelers?: (travelers: Traveler[]) => void;
 }
 
 export default function ChatInterface({ 
@@ -35,7 +37,8 @@ export default function ChatInterface({
   onEditTraveler,
   onRemoveTraveler,
   onNewTrip,
-  currentTripTitle
+  currentTripTitle,
+  onUpdateTravelers
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -44,6 +47,28 @@ export default function ChatInterface({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sharedItinerary, setSharedItinerary] = useState<RecommendationData[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Context state management
+  const [travelPreferences, setTravelPreferences] = useState({
+    destination: '',
+    checkIn: '',
+    checkOut: '',
+    budget: '',
+    tripType: [] as string[]
+  });
+
+  const [culturalSettings, setCulturalSettings] = useState({
+    culturalBackground: [] as string[],
+    dietaryRestrictions: [] as string[],
+    familyInterests: [] as string[]
+  });
+
+  // Generate travel context
+  const travelContext = useTravelContext({
+    travelers,
+    travelPreferences,
+    culturalSettings
+  });
 
   useEffect(() => {
     scrollToBottom();
@@ -89,6 +114,9 @@ export default function ChatInterface({
           messages: [...messages, userMessage],
           travelers,
           sessionId,
+          travelContext: travelContext.contextPrompt, // Add travel context
+          preferences: travelPreferences,
+          culturalSettings,
         }),
       });
 
@@ -160,6 +188,67 @@ export default function ChatInterface({
     return 'My Trip Plan';
   };
 
+  // Handle context updates from sidebar (batch add/remove travelers)
+  const handleUpdateContext = async (updates: {
+    newTravelers?: any[];
+    updatedTravelers?: Traveler[];
+    removedTravelerIds?: string[];
+  }) => {
+    try {
+      // Handle new travelers
+      if (updates.newTravelers && updates.newTravelers.length > 0) {
+        for (const newTraveler of updates.newTravelers) {
+          const response = await fetch('/api/travelers', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sessionId,
+              traveler: {
+                name: newTraveler.name,
+                age: newTraveler.age,
+                relationship: newTraveler.relationship,
+                mobility: newTraveler.mobility,
+                interests: newTraveler.interests,
+                dietary_restrictions: newTraveler.dietary_restrictions,
+              },
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to add traveler');
+          }
+        }
+      }
+
+      // Handle removed travelers
+      if (updates.removedTravelerIds && updates.removedTravelerIds.length > 0) {
+        for (const travelerId of updates.removedTravelerIds) {
+          if (onRemoveTraveler) {
+            onRemoveTraveler(travelerId);
+          }
+        }
+      }
+
+      // Refresh travelers list if we have the callback
+      if (onUpdateTravelers) {
+        // Re-fetch travelers to get updated list
+        const response = await fetch('/api/session');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data.travelers) {
+            onUpdateTravelers(result.data.travelers);
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error updating context:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-white">
       {/* Top Navigation Bar - Modern Style */}
@@ -190,22 +279,11 @@ export default function ChatInterface({
         </div>
       </div>
 
-      {/* Search Bar Section */}
-      <div className="bg-white border-b border-gray-100 py-2">
-        <div className="max-w-4xl mx-auto px-4">
-          <SearchBar 
-            onSearch={(searchData) => {
-              const guestCount = travelers.length || 1;
-              const searchMessage = `I want to plan a trip to ${searchData.destination}${searchData.checkIn ? ` from ${searchData.checkIn}` : ''}${searchData.checkOut ? ` to ${searchData.checkOut}` : ''} for ${guestCount} ${guestCount === 1 ? 'person' : 'people'}.`;
-              setInputMessage(searchMessage);
-            }}
-          />
-        </div>
-      </div>
+      {/* Search functionality moved to sidebar */}
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 bg-[rgb(var(--background-light))]">
-        {/* Travelers Sidebar - Collapsible */}
+        {/* Enhanced Sidebar - Expanded Width */}
         <div className={`bg-white border-r border-[rgb(var(--border-light))] transition-all duration-300 ${
           sidebarCollapsed ? 'w-12' : 'w-80'
         }`}>
@@ -218,6 +296,12 @@ export default function ChatInterface({
             onRemoveTraveler={onRemoveTraveler || (() => {})}
             onNewTrip={onNewTrip || (() => {})}
             currentTripTitle={currentTripTitle}
+            travelPreferences={travelPreferences}
+            onTravelPreferencesChange={setTravelPreferences}
+            culturalSettings={culturalSettings}
+            onCulturalSettingsChange={setCulturalSettings}
+            travelContext={travelContext}
+            onUpdateContext={handleUpdateContext}
           />
         </div>
         

@@ -47,22 +47,7 @@ export interface ChatMessage {
   };
 }
 
-// Onboarding and form types
-export interface OnboardingStep {
-  id: string;
-  question: string;
-  type: 'number' | 'text' | 'select' | 'multiselect' | 'age-specific';
-  options?: string[];
-  validation: (value: any) => boolean;
-  condition?: (answers: Record<string, any>) => boolean;
-}
-
-export interface OnboardingData {
-  traveler_count: number;
-  travelers: Partial<Traveler>[];
-  cultural_preferences: string[];
-  completed: boolean;
-}
+// Form types (onboarding replaced by sidebar integration)
 
 // API response types
 export interface ApiResponse<T = any> {

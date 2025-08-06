@@ -72,12 +72,12 @@ export default function RecommendationViews({
 
   const handleExport = () => {
     // TODO: Implement export functionality
-    console.log('Export itinerary:', itinerary);
+    console.log('Export itinerary:', sharedItinerary);
   };
 
   const handleShare = () => {
     // TODO: Implement share functionality
-    console.log('Share itinerary:', itinerary);
+    console.log('Share itinerary:', sharedItinerary);
   };
 
   // If no recommendations found, don't show the views

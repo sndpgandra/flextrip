@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { messages, travelers, sessionId } = validation.data;
+    const { messages, travelers, sessionId, travelContext, preferences, culturalSettings } = validation.data;
     
     // Initialize OpenRouter AI
     const openRouter = new OpenRouterAI();
@@ -47,8 +47,14 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     }));
     
-    // Generate AI response
-    const aiResponse = await openRouter.generateResponse(chatMessages, travelers as Traveler[]);
+    // Generate AI response with enhanced context
+    const aiResponse = await openRouter.generateResponseWithContext(
+      chatMessages, 
+      travelers as Traveler[], 
+      travelContext,
+      preferences,
+      culturalSettings
+    );
     
     // Create response message
     const responseMessage = {
