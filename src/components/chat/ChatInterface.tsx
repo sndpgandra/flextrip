@@ -204,20 +204,20 @@ export default function ChatInterface({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              sessionId,
-              traveler: {
-                name: newTraveler.name,
-                age: newTraveler.age,
-                relationship: newTraveler.relationship,
-                mobility: newTraveler.mobility,
-                interests: newTraveler.interests,
-                dietary_restrictions: newTraveler.dietary_restrictions,
-              },
+              session_id: sessionId,
+              name: newTraveler.name,
+              age: newTraveler.age,
+              relationship: newTraveler.relationship,
+              mobility: newTraveler.mobility,
+              interests: newTraveler.interests || [],
+              cultural_background: newTraveler.cultural_background || null,
+              dietary_restrictions: newTraveler.dietary_restrictions || [],
             }),
           });
           
           if (!response.ok) {
-            throw new Error('Failed to add traveler');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Failed to add traveler: ${errorData.error || response.statusText}`);
           }
         }
       }
