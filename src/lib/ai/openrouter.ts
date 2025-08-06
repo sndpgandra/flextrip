@@ -29,6 +29,7 @@ export class OpenRouterAI {
     content: string;
     model: string;
     tokens?: number;
+    structured_recommendations?: any[];
   }> {
     const systemPrompt = this.buildAgeAwarePrompt(travelers);
     const requestMessages = [
@@ -40,41 +41,263 @@ export class OpenRouterAI {
     ];
 
     try {
-      // Primary model: Claude 3.5 Sonnet
-      const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+      // Primary model: openrouter/horizon-beta
+      // const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+      const response = await this.callModel('openrouter/horizon-beta', requestMessages);
+      
+      const rawContent = response.choices[0].message.content;
+      
+      // Log the raw response for debugging
+      console.log('Raw AI response length:', rawContent.length);
+      console.log('Raw AI response preview:', rawContent.substring(0, 500));
+      
+      // Try to parse structured JSON response
+      const parsedResponse = this.parseStructuredResponse(rawContent);
+      
       return {
-        content: response.choices[0].message.content,
+        content: parsedResponse.conversational_response || rawContent,
         model: response.model,
-        tokens: response.usage?.total_tokens
+        tokens: response.usage?.total_tokens,
+        structured_recommendations: parsedResponse.structured_recommendations
       };
     } catch (error) {
-      console.warn('Claude 3.5 Sonnet failed, falling back to GPT-4o mini:', error);
-      
+      console.warn('openrouter/horizon-beta failed, falling back to Claude 3.5 Sonnet:', error);
+
       try {
-        // Fallback model: GPT-4o mini
-        const response = await this.callModel('openai/gpt-4o-mini', requestMessages);
+        // Secondary model: Claude 3.5 Sonnet
+        const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+        
+        const rawContent = response.choices[0].message.content;
+        
+        // Log the raw response for debugging
+        console.log('Raw AI response length:', rawContent.length);
+        console.log('Raw AI response preview:', rawContent.substring(0, 500));
+        
+        // Try to parse structured JSON response
+        const parsedResponse = this.parseStructuredResponse(rawContent);
+        
         return {
-          content: response.choices[0].message.content,
+          content: parsedResponse.conversational_response || rawContent,
           model: response.model,
-          tokens: response.usage?.total_tokens
+          tokens: response.usage?.total_tokens,
+          structured_recommendations: parsedResponse.structured_recommendations
         };
-      } catch (fallbackError) {
-        console.error('Both AI models failed:', fallbackError);
-        throw new Error('AI service temporarily unavailable');
+      } catch (error) {
+        console.warn('Claude 3.5 Sonnet failed, falling back to GPT-4o mini:', error);
+      
+        try {
+          // Fallback model: GPT-4o mini
+          const response = await this.callModel('openai/gpt-4o-mini', requestMessages);
+          const rawContent = response.choices[0].message.content;
+          
+          // Log the raw response for debugging
+          console.log('Raw AI response (fallback) length:', rawContent.length);
+          console.log('Raw AI response (fallback) preview:', rawContent.substring(0, 500));
+          
+          // Try to parse structured JSON response
+          const parsedResponse = this.parseStructuredResponse(rawContent);
+          
+          return {
+            content: parsedResponse.conversational_response || rawContent,
+            model: response.model,
+            tokens: response.usage?.total_tokens,
+            structured_recommendations: parsedResponse.structured_recommendations
+          };
+        } catch (fallbackError) {
+          console.error('All AI models failed:', fallbackError);
+          throw new Error('AI service temporarily unavailable');
+        }
       }
     }
   }
 
-  async generateStreamingResponse(messages: ChatMessage[], travelers: Traveler[]): Promise<AsyncIterable<string>> {
-    const systemPrompt = this.buildAgeAwarePrompt(travelers);
+  // Enhanced method with travel context
+  async generateResponseWithContext(
+    messages: ChatMessage[], 
+    travelers: Traveler[], 
+    travelContext?: string,
+    preferences?: any,
+    culturalSettings?: any
+  ): Promise<{
+    content: string;
+    model: string;
+    tokens?: number;
+    structured_recommendations?: any[];
+  }> {
+    // If we have travel context, use it; otherwise fall back to the original method
+    if (!travelContext || travelContext.trim().length === 0) {
+      return this.generateResponse(messages, travelers);
+    }
+
+    // Build enhanced system prompt with travel context
+    const baseSystemPrompt = this.buildAgeAwarePrompt(travelers);
+    const enhancedSystemPrompt = `${baseSystemPrompt}
+
+CURRENT TRAVEL CONTEXT:
+${travelContext}
+
+Based on this context, please provide personalized recommendations that consider all family members' needs, preferences, and constraints. Always include specific details about accessibility, age-appropriateness, and timing recommendations.`;
+
     const requestMessages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: enhancedSystemPrompt },
       ...messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }))
     ];
 
+    try {
+      // Primary model: openrouter/horizon-beta
+      const response = await this.callModel('openrouter/horizon-beta', requestMessages);
+      
+      const rawContent = response.choices[0].message.content;
+      
+      // Log the raw response for debugging
+      console.log('Enhanced AI response length:', rawContent.length);
+      console.log('Travel context used:', travelContext.substring(0, 200) + '...');
+      
+      // Try to parse structured JSON response
+      const parsedResponse = this.parseStructuredResponse(rawContent);
+      
+      return {
+        content: parsedResponse.conversational_response || rawContent,
+        model: response.model,
+        tokens: response.usage?.total_tokens,
+        structured_recommendations: parsedResponse.structured_recommendations
+      };
+    } catch (error) {
+      console.warn('Enhanced request failed, falling back to Claude 3.5 Sonnet:', error);
+
+      try {
+        // Secondary model: Claude 3.5 Sonnet
+        const response = await this.callModel('anthropic/claude-3.5-sonnet', requestMessages);
+        
+        const rawContent = response.choices[0].message.content;
+        const parsedResponse = this.parseStructuredResponse(rawContent);
+        
+        return {
+          content: parsedResponse.conversational_response || rawContent,
+          model: response.model,
+          tokens: response.usage?.total_tokens,
+          structured_recommendations: parsedResponse.structured_recommendations
+        };
+      } catch (fallbackError) {
+        console.error('All AI models failed with enhanced context:', fallbackError);
+        // Final fallback to original method without context
+        console.log('Falling back to original generateResponse method...');
+        return this.generateResponse(messages, travelers);
+      }
+    }
+  }
+
+  private parseStructuredResponse(content: string): {
+    conversational_response?: string;
+    structured_recommendations?: any[];
+  } {
+    try {
+      // First try to parse the content directly as JSON (it should be pure JSON)
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch (directParseError) {
+        console.warn('Direct JSON parse failed, trying recovery:', directParseError);
+        
+        // Try to recover from truncated JSON
+        let recoveredJson = this.recoverTruncatedJson(content);
+        
+        if (recoveredJson) {
+          try {
+            parsed = JSON.parse(recoveredJson);
+          } catch (recoveryError) {
+            console.warn('JSON recovery failed:', recoveryError);
+            return { conversational_response: content, structured_recommendations: [] };
+          }
+        } else {
+          return { conversational_response: content, structured_recommendations: [] };
+        }
+      }
+      
+      // Validate the structure
+      if (parsed && typeof parsed === 'object') {
+        return {
+          conversational_response: parsed.conversational_response || 'I can help you plan your trip!',
+          structured_recommendations: Array.isArray(parsed.structured_recommendations) ? parsed.structured_recommendations : []
+        };
+      }
+      
+      // If structure is invalid, return fallback
+      return {
+        conversational_response: typeof parsed === 'string' ? parsed : content,
+        structured_recommendations: []
+      };
+      
+    } catch (parseError) {
+      console.warn('JSON parsing completely failed:', parseError);
+      console.warn('Content preview:', content.substring(0, 500));
+    }
+    
+    // Fallback to treating content as conversational response
+    return {
+      conversational_response: content,
+      structured_recommendations: []
+    };
+  }
+
+  private recoverTruncatedJson(content: string): string | null {
+    try {
+      // Find the JSON object start
+      const jsonMatch = content.match(/\{[\s\S]*$/);
+      if (!jsonMatch) return null;
+
+      let jsonString = jsonMatch[0];
+      
+      // Remove any trailing incomplete content
+      jsonString = jsonString.replace(/,\s*$/, '');
+      jsonString = jsonString.replace(/"\s*$/, '');
+      jsonString = jsonString.replace(/[^"}\]]*$/, '');
+      
+      // Fix common truncation issues
+      jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+      
+      // Try to close incomplete structures
+      let openBraces = 0;
+      let openBrackets = 0;
+      let inString = false;
+      let lastChar = '';
+      
+      for (let i = 0; i < jsonString.length; i++) {
+        const char = jsonString[i];
+        
+        if (char === '"' && lastChar !== '\\') {
+          inString = !inString;
+        } else if (!inString) {
+          if (char === '{') openBraces++;
+          else if (char === '}') openBraces--;
+          else if (char === '[') openBrackets++;
+          else if (char === ']') openBrackets--;
+        }
+        
+        lastChar = char;
+      }
+      
+      // Close any unclosed structures
+      while (openBrackets > 0) {
+        jsonString += ']';
+        openBrackets--;
+      }
+      while (openBraces > 0) {
+        jsonString += '}';
+        openBraces--;
+      }
+      
+      return jsonString;
+    } catch (error) {
+      console.warn('JSON recovery failed:', error);
+      return null;
+    }
+  }
+
+  async generateStreamingResponse(messages: ChatMessage[], travelers: Traveler[]): Promise<AsyncIterable<string>> {
     // For streaming, we'll use a simple approach initially
     // In production, you'd implement proper streaming with Server-Sent Events
     const response = await this.generateResponse(messages, travelers);
@@ -104,7 +327,7 @@ export class OpenRouterAI {
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 1000,
+        max_tokens: 6000, // Increased to accommodate 8-12 recommendations
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.1,
@@ -153,6 +376,37 @@ KEY PRINCIPLES:
 - Consider cultural preferences and dietary restrictions in restaurant recommendations
 - Provide specific, actionable advice rather than generic suggestions
 
+CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not include any text before or after the JSON:
+
+{
+  "conversational_response": "Your friendly, detailed travel advice explaining recommendations and reasoning...",
+  "structured_recommendations": [
+    {
+      "title": "Specific Place Name",
+      "category": "attraction",
+      "description": "Detailed description of the place and why it works for this group",
+      "rating": 4.5,
+      "duration": "2 hours",
+      "price": "$$",
+      "ageGroup": ["All Ages"],
+      "accessibility": "Fully accessible",
+      "location": "Specific address or area",
+      "timeSlot": "evening"
+    }
+  ]
+}
+
+MANDATORY RULES:
+1. Response must be ONLY valid JSON - no extra text
+2. Use only these categories: "attraction", "restaurant", "transport", "accommodation"
+3. Include 8-12 specific, real places in structured_recommendations for comprehensive options
+4. Each title must be an actual place name (not description)
+5. Escape quotes in descriptions using backslash
+6. Keep descriptions under 80 characters to prevent truncation
+7. Keep conversational_response under 400 characters
+8. End JSON with proper closing braces - ensure complete response
+9. CRITICAL: Complete the JSON properly - do not let it get cut off
+
 Provide thoughtful, detailed recommendations that ensure everyone in this multi-generational group can enjoy the travel experience together.`;
   }
 
@@ -175,8 +429,8 @@ Provide thoughtful, detailed recommendations that ensure everyone in this multi-
   }
 
   private generateCulturalGuidelines(travelers: Traveler[]): string {
-    const cultures = [...new Set(travelers.map(t => t.cultural_background).filter(Boolean))];
-    const dietary = [...new Set(travelers.flatMap(t => t.dietary_restrictions || []))];
+    const cultures = Array.from(new Set(travelers.map(t => t.cultural_background).filter(Boolean)));
+    const dietary = Array.from(new Set(travelers.flatMap(t => t.dietary_restrictions || [])));
 
     let guidelines = '';
     

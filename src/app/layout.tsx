@@ -17,16 +17,35 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/flexitrip-icon.svg', type: 'image/svg+xml', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/flexitrip-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
+    ],
+    shortcut: ['/favicon.svg'],
+  },
   openGraph: {
     title: 'FlexiTrip - Multi-Generational Travel Planning',
     description: 'AI-powered travel planning that works for everyone in the family',
     type: 'website',
     locale: 'en_US',
+    images: [
+      {
+        url: '/flexitrip-logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'FlexiTrip Logo',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'FlexiTrip - Multi-Generational Travel Planning',
     description: 'AI-powered travel planning that works for everyone in the family',
+    images: ['/flexitrip-logo.svg'],
   },
   viewport: {
     width: 'device-width',

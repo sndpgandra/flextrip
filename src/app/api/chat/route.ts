@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OpenRouterAI } from '@/lib/ai/openrouter';
 import { ChatRequestSchema } from '@/lib/validation/schemas';
 import { rateLimit } from '@/lib/utils/rate-limit';
+import type { Traveler } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { messages, travelers, sessionId } = validation.data;
+    const { messages, travelers, sessionId, travelContext, preferences, culturalSettings } = validation.data;
     
     // Initialize OpenRouter AI
     const openRouter = new OpenRouterAI();
@@ -46,8 +47,14 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     }));
     
-    // Generate AI response
-    const aiResponse = await openRouter.generateResponse(chatMessages, travelers);
+    // Generate AI response with enhanced context
+    const aiResponse = await openRouter.generateResponseWithContext(
+      chatMessages, 
+      travelers as Traveler[], 
+      travelContext,
+      preferences,
+      culturalSettings
+    );
     
     // Create response message
     const responseMessage = {
@@ -65,6 +72,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         message: responseMessage,
+        structured_recommendations: aiResponse.structured_recommendations || [],
         remaining_requests: rateLimitResult.remaining
       }
     });

@@ -14,6 +14,9 @@ export default function ChatPage() {
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string>('');
+  const [currentTripTitle, setCurrentTripTitle] = useState<string>();
 
   useEffect(() => {
     initializeChat();
@@ -28,11 +31,7 @@ export default function ChatPage() {
         setSessionId(result.data.sessionId);
         setTravelers(result.data.travelers);
         
-        // If no travelers, redirect to onboarding
-        if (result.data.travelers.length === 0) {
-          router.push('/onboarding');
-          return;
-        }
+        // Allow empty state - users can add travelers via sidebar
       } else {
         setError('Failed to load session data');
       }
@@ -45,6 +44,10 @@ export default function ChatPage() {
   };
 
   const handleSaveTrip = async (title: string, messages: ChatMessage[]) => {
+    setIsSaving(true);
+    setSaveSuccess('');
+    setError('');
+
     try {
       const response = await fetch('/api/trips', {
         method: 'POST',
@@ -63,13 +66,17 @@ export default function ChatPage() {
       const result = await response.json();
       
       if (result.success) {
-        // Show success message or redirect to trips page
-        console.log('Trip saved successfully');
+        setSaveSuccess(`Trip "${title}" saved successfully!`);
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => setSaveSuccess(''), 3000);
       } else {
-        console.error('Failed to save trip:', result.error);
+        setError(`Failed to save trip: ${result.error}`);
       }
     } catch (error) {
       console.error('Error saving trip:', error);
+      setError('Failed to save trip. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -83,6 +90,36 @@ export default function ChatPage() {
       }
     }
     return undefined;
+  };
+
+  const handleAddTraveler = () => {
+    // Handled by inline sidebar form
+    console.log('Add traveler triggered from sidebar');
+  };
+
+  const handleEditTraveler = (traveler: Traveler) => {
+    // Handled by inline sidebar form
+    console.log('Edit traveler triggered from sidebar', traveler);
+  };
+
+  const handleRemoveTraveler = async (travelerId: string) => {
+    try {
+      const response = await fetch(`/api/travelers/${travelerId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setTravelers(prev => prev.filter(t => t.id !== travelerId));
+      }
+    } catch (error) {
+      console.error('Error removing traveler:', error);
+    }
+  };
+
+  const handleNewTrip = () => {
+    setCurrentTripTitle(undefined);
+    // Could also clear chat messages or redirect
+    window.location.reload();
   };
 
   if (isLoading) {
@@ -118,34 +155,21 @@ export default function ChatPage() {
     );
   }
 
-  if (travelers.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="h-6 w-6 mr-2" />
-              No Travelers Found
-            </CardTitle>
-            <CardDescription>
-              You need to set up your family profile before you can start planning trips.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push('/onboarding')}>
-              Set Up Family Profile
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Remove empty state blocking - allow direct access to chat interface
 
   return (
     <ChatInterface
       sessionId={sessionId}
       travelers={travelers}
       onSaveTrip={handleSaveTrip}
+      isSaving={isSaving}
+      saveSuccess={saveSuccess}
+      onAddTraveler={handleAddTraveler}
+      onEditTraveler={handleEditTraveler}
+      onRemoveTraveler={handleRemoveTraveler}
+      onNewTrip={handleNewTrip}
+      currentTripTitle={currentTripTitle}
+      onUpdateTravelers={setTravelers}
     />
   );
 }

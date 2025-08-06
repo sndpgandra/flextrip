@@ -55,20 +55,33 @@ export const UpdateTripSchema = TripSchema.partial().extend({
   id: z.string().uuid('Invalid trip ID'),
 });
 
+// Travel preferences schema
+export const TravelPreferencesSchema = z.object({
+  destination: z.string().optional(),
+  checkIn: z.string().optional(),
+  checkOut: z.string().optional(),
+  budget: z.string().optional(),
+  tripType: z.array(z.string()).optional(),
+});
+
+// Cultural settings schema
+export const CulturalSettingsSchema = z.object({
+  culturalBackground: z.array(z.string()).optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  familyInterests: z.array(z.string()).optional(),
+});
+
 // Chat API validation
 export const ChatRequestSchema = z.object({
   messages: z.array(ChatMessageSchema.omit({ timestamp: true, metadata: true })),
   travelers: z.array(TravelerSchema),
   sessionId: z.string().uuid('Invalid session ID'),
+  travelContext: z.string().optional(), // Generated context prompt
+  preferences: TravelPreferencesSchema.optional(),
+  culturalSettings: CulturalSettingsSchema.optional(),
 });
 
-// Onboarding validation
-export const OnboardingDataSchema = z.object({
-  traveler_count: z.number().int().min(1).max(8),
-  travelers: z.array(TravelerSchema.omit({ session_id: true })),
-  cultural_preferences: z.array(z.string()).optional(),
-  completed: z.boolean().default(false),
-});
+// Onboarding replaced by sidebar integration
 
 // Rate limiting
 export const RateLimitSchema = z.object({
@@ -94,4 +107,4 @@ export type CreateTripInput = z.infer<typeof CreateTripSchema>;
 export type UpdateTripInput = z.infer<typeof UpdateTripSchema>;
 export type ChatMessageInput = z.infer<typeof ChatMessageSchema>;
 export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
-export type OnboardingDataInput = z.infer<typeof OnboardingDataSchema>;
+// OnboardingDataInput removed - using sidebar integration

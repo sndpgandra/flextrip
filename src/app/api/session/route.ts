@@ -89,7 +89,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body = {};
+    try {
+      // Try to parse JSON, but don't fail if it's empty
+      const requestText = await request.text();
+      if (requestText.trim()) {
+        body = JSON.parse(requestText);
+      }
+    } catch (jsonError) {
+      // If JSON parsing fails, use empty body (for new session creation)
+      body = {};
+    }
+    
     const validation = SessionSchema.safeParse(body);
     
     if (!validation.success) {

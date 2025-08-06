@@ -134,3 +134,45 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE /api/travelers - Delete all travelers for a session
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+    
+    if (!sessionId) {
+      return NextResponse.json(
+        { success: false, error: 'Session ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    const supabase = createServerSupabaseClient();
+    
+    const { error } = await supabase
+      .from('travelers')
+      .delete()
+      .eq('session_id', sessionId);
+    
+    if (error) {
+      console.error('Error deleting travelers:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to delete travelers' },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Travelers deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Travelers DELETE error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
