@@ -201,8 +201,10 @@ Based on this context, please provide personalized recommendations that consider
         parsed = JSON.parse(content);
       } catch (directParseError) {
         console.warn('Direct JSON parse failed, trying recovery:', directParseError);
+        console.warn('Content preview:', content.substring(0, 200) + '...');
+        console.warn('Content end:', content.substring(Math.max(0, content.length - 200)));
         
-        // Try to recover from truncated JSON
+        // Try to recover from truncated or malformed JSON
         let recoveredJson = this.recoverTruncatedJson(content);
         
         if (recoveredJson) {
@@ -210,10 +212,18 @@ Based on this context, please provide personalized recommendations that consider
             parsed = JSON.parse(recoveredJson);
           } catch (recoveryError) {
             console.warn('JSON recovery failed:', recoveryError);
-            return { conversational_response: content, structured_recommendations: [] };
+            // Extract just the conversational response if possible
+            const conversationalMatch = content.match(/"conversational_response"\s*:\s*"([^"]+(?:\\.[^"]*)*?)"/);
+            const fallbackResponse = conversationalMatch ? conversationalMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : 
+              'I can help you plan your trip! Could you tell me more about what you\'re looking for?';
+            return { conversational_response: fallbackResponse, structured_recommendations: [] };
           }
         } else {
-          return { conversational_response: content, structured_recommendations: [] };
+          // Try to extract conversational response even from malformed JSON
+          const conversationalMatch = content.match(/"conversational_response"\s*:\s*"([^"]+(?:\\.[^"]*)*?)"/);
+          const fallbackResponse = conversationalMatch ? conversationalMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : 
+            'I can help you plan your trip! Could you tell me more about what you\'re looking for?';
+          return { conversational_response: fallbackResponse, structured_recommendations: [] };
         }
       }
       
@@ -251,36 +261,67 @@ Based on this context, please provide personalized recommendations that consider
 
       let jsonString = jsonMatch[0];
       
-      // Remove any trailing incomplete content
-      jsonString = jsonString.replace(/,\s*$/, '');
-      jsonString = jsonString.replace(/"\s*$/, '');
-      jsonString = jsonString.replace(/[^"}\]]*$/, '');
-      
-      // Fix common truncation issues
-      jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
-      
-      // Try to close incomplete structures
+      // Handle string escaping and truncation issues more carefully
       let openBraces = 0;
       let openBrackets = 0;
       let inString = false;
-      let lastChar = '';
+      let escapeNext = false;
+      let validEnd = jsonString.length;
       
+      // Find the last valid position
       for (let i = 0; i < jsonString.length; i++) {
         const char = jsonString[i];
         
-        if (char === '"' && lastChar !== '\\') {
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"') {
           inString = !inString;
         } else if (!inString) {
           if (char === '{') openBraces++;
-          else if (char === '}') openBraces--;
+          else if (char === '}') {
+            openBraces--;
+            if (openBraces === 0 && openBrackets === 0) {
+              validEnd = i + 1;
+              break;
+            }
+          }
           else if (char === '[') openBrackets++;
           else if (char === ']') openBrackets--;
         }
-        
-        lastChar = char;
       }
       
-      // Close any unclosed structures
+      // Truncate to valid end
+      jsonString = jsonString.substring(0, validEnd);
+      
+      // If we're still in a string, try to close it
+      if (inString) {
+        // Look for the last complete property before the broken string
+        const lastCompleteMatch = jsonString.match(/^([\s\S]*"[^"]*")\s*:\s*"[^"]*$/);
+        if (lastCompleteMatch) {
+          // Remove the incomplete string property
+          jsonString = lastCompleteMatch[1];
+          // Add closing braces
+          while (openBraces > 0) {
+            jsonString += '}';
+            openBraces--;
+          }
+          return jsonString;
+        }
+      }
+      
+      // Remove trailing commas and incomplete content
+      jsonString = jsonString.replace(/,\s*([}\]])/g, '$1');
+      jsonString = jsonString.replace(/,\s*$/, '');
+      
+      // Close any remaining open structures
       while (openBrackets > 0) {
         jsonString += ']';
         openBrackets--;
@@ -327,7 +368,7 @@ Based on this context, please provide personalized recommendations that consider
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 6000, // Increased to accommodate 8-12 recommendations
+        max_tokens: 5000, // Reduced to prevent truncation issues
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.1,
@@ -399,13 +440,14 @@ CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not inc
 MANDATORY RULES:
 1. Response must be ONLY valid JSON - no extra text
 2. Use only these categories: "attraction", "restaurant", "transport", "accommodation"
-3. Include 8-12 specific, real places in structured_recommendations for comprehensive options
+3. Include 6-10 specific, real places in structured_recommendations (reduced for reliability)
 4. Each title must be an actual place name (not description)
-5. Escape quotes in descriptions using backslash
-6. Keep descriptions under 80 characters to prevent truncation
-7. Keep conversational_response under 400 characters
-8. End JSON with proper closing braces - ensure complete response
-9. CRITICAL: Complete the JSON properly - do not let it get cut off
+5. DO NOT use backslashes or escape characters in descriptions - use simple text only
+6. Keep descriptions under 60 characters - be concise
+7. Keep conversational_response under 300 characters - be brief
+8. NEVER use line breaks or special characters in strings
+9. End JSON with proper closing braces - ensure complete response
+10. CRITICAL: Test your JSON is valid before responding
 
 Provide thoughtful, detailed recommendations that ensure everyone in this multi-generational group can enjoy the travel experience together.`;
   }

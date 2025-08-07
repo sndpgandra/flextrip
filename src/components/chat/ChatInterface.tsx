@@ -152,7 +152,7 @@ export default function ChatInterface({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -186,6 +186,19 @@ export default function ChatInterface({
     }
     
     return 'My Trip Plan';
+  };
+
+  // Handle generated prompts from sidebar
+  const handlePromptGenerated = (prompt: string) => {
+    setInputMessage(prompt);
+    // Optionally auto-focus the input
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(prompt.length, prompt.length);
+      }
+    }, 100);
   };
 
   // Handle context updates from sidebar (batch add/remove travelers)
@@ -302,6 +315,8 @@ export default function ChatInterface({
             onCulturalSettingsChange={setCulturalSettings}
             travelContext={travelContext}
             onUpdateContext={handleUpdateContext}
+            onPromptGenerated={handlePromptGenerated}
+            sessionId={sessionId}
           />
         </div>
         
@@ -354,7 +369,7 @@ export default function ChatInterface({
                   <textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder="Ask me anything about your trip planning..."
                     disabled={isLoading}
                     rows={1}

@@ -23,10 +23,14 @@ import {
   Calendar,
   DollarSign,
   Globe,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Sparkles,
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 import type { Traveler } from '@/types';
 import { RELATIONSHIP_OPTIONS, INTEREST_OPTIONS, CULTURAL_OPTIONS, DIETARY_OPTIONS } from '@/types';
+import { generateBasePrompt, generateQuickPrompts, hasValidSelections } from '@/lib/utils/prompt-generator';
 
 interface TravelPreferences {
   destination: string;
@@ -61,6 +65,8 @@ interface FamilySidebarProps {
     updatedTravelers?: Traveler[];
     removedTravelerIds?: string[];
   }) => void;
+  onPromptGenerated?: (prompt: string) => void;
+  sessionId?: string;
 }
 
 export default function FamilySidebar({
@@ -77,7 +83,9 @@ export default function FamilySidebar({
   culturalSettings,
   onCulturalSettingsChange,
   travelContext,
-  onUpdateContext
+  onUpdateContext,
+  onPromptGenerated,
+  sessionId
 }: FamilySidebarProps) {
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -88,6 +96,7 @@ export default function FamilySidebar({
     family: true,
     preferences: true,
     cultural: false,
+    promptGeneration: false,
     tripManagement: false
   });
 
@@ -95,6 +104,10 @@ export default function FamilySidebar({
   const [pendingTravelers, setPendingTravelers] = useState<any[]>([]);
   const [removedTravelerIds, setRemovedTravelerIds] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Prompt generation state
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [selectedPromptType, setSelectedPromptType] = useState<'general' | 'activities' | 'dining' | 'accommodation' | 'transportation'>('general');
 
   // Form state for new traveler
   const [newTraveler, setNewTraveler] = useState<{
@@ -226,7 +239,7 @@ export default function FamilySidebar({
 
     try {
       // Call the parent's update function with all changes
-      await onUpdateContext({
+      onUpdateContext({
         newTravelers: pendingTravelers,
         removedTravelerIds: removedTravelerIds
       });
@@ -245,6 +258,73 @@ export default function FamilySidebar({
   const getAllTravelers = () => {
     const existingTravelers = travelers.filter(t => !removedTravelerIds.includes(t.id));
     return [...existingTravelers, ...pendingTravelers];
+  };
+
+  // Generate and enhance prompt
+  const handleGeneratePrompt = async () => {
+    if (!onPromptGenerated || !sessionId) return;
+    
+    const allTravelers = getAllTravelers();
+    const options = {
+      travelers: allTravelers,
+      travelPreferences,
+      culturalSettings,
+      focusType: selectedPromptType
+    };
+
+    if (!hasValidSelections(options)) {
+      alert('Please add family members or destination to generate a travel prompt.');
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      // Generate base prompt
+      const basePrompt = generateBasePrompt(options);
+      
+      // Enhance with LLM
+      const response = await fetch('/api/enhance-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          basePrompt,
+          travelContext: travelContext.contextPrompt,
+          sessionId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to enhance prompt');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        // Send enhanced prompt to chat input
+        onPromptGenerated(result.data.enhancedPrompt);
+      } else {
+        // Fallback to base prompt if enhancement fails
+        onPromptGenerated(basePrompt);
+      }
+    } catch (error) {
+      console.error('Prompt generation error:', error);
+      // Fallback to base prompt
+      const basePrompt = generateBasePrompt(options);
+      onPromptGenerated(basePrompt);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  // Check if prompt generation is available
+  const canGeneratePrompt = () => {
+    const allTravelers = getAllTravelers();
+    return hasValidSelections({
+      travelers: allTravelers,
+      travelPreferences,
+      culturalSettings
+    });
   };
 
   if (isCollapsed) {
@@ -657,6 +737,88 @@ export default function FamilySidebar({
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Prompt Generation Section */}
+        <div className="border-b">
+          <button
+            onClick={() => toggleSection('promptGeneration' as any)}
+            className="w-full p-4 text-left hover:bg-gray-50 flex items-center justify-between"
+          >
+            <div className="flex items-center">
+              <Sparkles className="h-4 w-4 text-primary mr-2" />
+              <span className="font-medium">AI Trip Planner</span>
+              {canGeneratePrompt() && (
+                <Badge className="ml-2 bg-green-100 text-green-800">
+                  Ready
+                </Badge>
+              )}
+            </div>
+            {expandedSections.promptGeneration ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          
+          {expandedSections.promptGeneration && (
+            <div className="p-4 pt-0 space-y-3">
+              {canGeneratePrompt() ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Focus Area</label>
+                    <div className="grid grid-cols-2 gap-1">
+                      {[
+                        { value: 'general', label: 'General' },
+                        { value: 'activities', label: 'Activities' },
+                        { value: 'dining', label: 'Dining' },
+                        { value: 'accommodation', label: 'Hotels' },
+                        { value: 'transportation', label: 'Transport' }
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setSelectedPromptType(option.value as any)}
+                          className={`text-xs p-2 rounded transition-colors ${
+                            selectedPromptType === option.value
+                              ? 'bg-primary text-white'
+                              : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleGeneratePrompt}
+                    disabled={isEnhancing}
+                    className="flexitrip-button-primary w-full disabled:opacity-50"
+                  >
+                    {isEnhancing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Enhancing...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Generate Trip Query
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Creates an AI-enhanced travel query based on your selections
+                  </p>
+                </>
+              ) : (
+                <Card className="border-dashed">
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <Sparkles className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Add family members or destination to generate personalized travel queries
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
