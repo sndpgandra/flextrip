@@ -55,6 +55,18 @@ export const generateBasePrompt = ({
     parts.push(`with a ${budgetDesc} budget`);
   }
   
+  // Add cultural population insights
+  const culturalInsights = getCulturalPopulationInsights(culturalSettings);
+  if (culturalInsights) {
+    parts.push(`. ${culturalInsights}`);
+  }
+  
+  // Add accessibility and family considerations
+  const familyConsiderations = getFamilyConsiderations(travelers);
+  if (familyConsiderations) {
+    parts.push(`. ${familyConsiderations}`);
+  }
+  
   // Add focus type specific request
   const focusRequest = getFocusRequest(focusType, culturalSettings);
   if (focusRequest) {
@@ -100,25 +112,30 @@ const buildFamilyDescription = (travelers: Traveler[]): string => {
 };
 
 const getFocusRequest = (focusType: string, culturalSettings: CulturalSettings): string => {
+  const culturalNote = culturalSettings.culturalBackground.length > 0 
+    ? ` We come from ${culturalSettings.culturalBackground.join(' and ')} backgrounds and would appreciate culturally authentic experiences.`
+    : '';
+  
+  const dietaryNote = culturalSettings.dietaryRestrictions.length > 0 
+    ? ` We have ${culturalSettings.dietaryRestrictions.join(' and ')} dietary requirements.`
+    : '';
+  
   switch (focusType) {
     case 'activities':
-      return 'What activities and attractions would you recommend for our group?';
+      return `What activities and attractions would you recommend for our group?${culturalNote} Please include both mainstream attractions and culturally significant places.`;
     
     case 'dining':
-      const dietaryNote = culturalSettings.dietaryRestrictions.length > 0 
-        ? ` We have ${culturalSettings.dietaryRestrictions.join(' and ')} dietary requirements.`
-        : '';
-      return `What are the best restaurants and dining experiences for families?${dietaryNote}`;
+      return `What are the best restaurants and dining experiences for families?${culturalNote}${dietaryNote} We'd love both authentic cultural restaurants and family-friendly options.`;
     
     case 'accommodation':
-      return 'What type of accommodation would work best for our group, and do you have specific recommendations?';
+      return `What type of accommodation would work best for our group, and do you have specific recommendations?${culturalNote} Please consider cultural preferences and family needs.`;
     
     case 'transportation':
-      return 'What\'s the best way to get around and what transportation options would you recommend for our group?';
+      return `What's the best way to get around and what transportation options would you recommend for our group?${culturalNote} Please consider accessibility and cultural considerations.`;
     
     case 'general':
     default:
-      return 'What would you recommend for activities, dining, and places to stay?';
+      return `What would you recommend for activities, dining, and places to stay?${culturalNote}${dietaryNote} Please include both popular attractions and authentic cultural experiences.`;
   }
 };
 
@@ -148,6 +165,76 @@ export const generateQuickPrompts = (options: PromptGeneratorOptions): string[] 
   }
   
   return quickPrompts.slice(0, 3); // Return max 3 suggestions
+};
+
+const getCulturalPopulationInsights = (culturalSettings: CulturalSettings): string => {
+  if (culturalSettings.culturalBackground.length === 0) return '';
+  
+  const insights: string[] = [];
+  
+  culturalSettings.culturalBackground.forEach(culture => {
+    const lowerCulture = culture.toLowerCase();
+    
+    // Indian/South Asian insights
+    if (['indian', 'pakistani', 'bangladeshi', 'sri_lankan', 'south_asian'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please prioritize vegetarian-friendly dining with authentic Indian/South Asian restaurants, Hindu temples or cultural centers, traditional spice markets, and venues with comfortable seating for seniors');
+    }
+    
+    // Chinese insights
+    if (['chinese', 'taiwanese', 'hong_kong'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please include authentic Chinese restaurants in cultural districts, traditional tea houses, temples, and markets where the local Chinese community gathers');
+    }
+    
+    // Mexican/Hispanic insights
+    if (['mexican', 'hispanic', 'latino'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please include authentic Mexican/Latino restaurants, cultural plazas, art districts, traditional markets, and family-friendly venues with live music');
+    }
+    
+    // Middle Eastern insights
+    if (['middle_eastern', 'arabic', 'persian', 'turkish'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please include halal dining options, mosques or Islamic cultural centers, traditional bazaars, and Middle Eastern restaurants frequented by the local community');
+    }
+    
+    // African insights
+    if (['african', 'ethiopian', 'nigerian'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please include authentic African restaurants, cultural centers, music venues that celebrate African heritage, and community gathering spaces');
+    }
+    
+    // Jewish insights
+    if (['jewish', 'israeli'].some(c => lowerCulture.includes(c))) {
+      insights.push('Please include kosher dining options, synagogues or Jewish cultural centers, heritage museums, and restaurants popular with the local Jewish community');
+    }
+  });
+  
+  return insights.length > 0 ? insights.join('; ') : '';
+};
+
+const getFamilyConsiderations = (travelers: Traveler[]): string => {
+  if (travelers.length === 0) return '';
+  
+  const considerations: string[] = [];
+  const ages = travelers.map(t => t.age);
+  const hasChildren = ages.some(age => age < 18);
+  const hasSeniors = ages.some(age => age >= 65);
+  const hasLowMobility = travelers.some(t => t.mobility === 'low' || t.mobility === 'medium');
+  
+  if (hasChildren) {
+    considerations.push('include family-friendly activities with interactive experiences');
+  }
+  
+  if (hasSeniors) {
+    considerations.push('prioritize venues with comfortable seating, elevators or ramps, and shorter walking distances');
+  }
+  
+  if (hasLowMobility) {
+    considerations.push('ensure wheelchair accessibility, avoid stairs-only access, and suggest reserve-ahead options');
+  }
+  
+  if (hasSeniors || hasLowMobility) {
+    considerations.push('recommend quieter time slots and mention any senior or accessibility discounts');
+  }
+  
+  return considerations.length > 0 ? `We prefer venues that ${considerations.join(', ')}` : '';
 };
 
 export const hasValidSelections = (options: PromptGeneratorOptions): boolean => {

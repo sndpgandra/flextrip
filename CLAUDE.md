@@ -17,7 +17,7 @@ FlexiTrip is a Progressive Web App (PWA) for multi-generational travel planning 
 **Backend:**
 - Next.js API Routes (Vercel Functions)
 - PostgreSQL via Supabase (free tier)
-- OpenRouter.ai for multi-model AI access (Claude 3.5 Sonnet primary, GPT-4o mini fallback)
+- OpenRouter.ai for multi-model AI access (openrouter/horizon-beta primary, openai/gpt-4o-mini fallback)
 
 **Infrastructure:**
 - Hosting: Vercel (free tier)
@@ -48,8 +48,14 @@ Key relationships:
 ## AI Implementation
 
 The AI system uses OpenRouter.ai to access multiple models with intelligent selection:
-- Primary: Claude 3.5 Sonnet for complex multi-generational planning
-- Fallback: GPT-4o mini for simpler queries and cost optimization
+- Primary: openrouter/horizon-beta for complex multi-generational planning and prompt enhancement
+- Fallback: openai/gpt-4o-mini for reliability and cost optimization
+- Secondary: anthropic/claude-3.5-sonnet for complex travel planning (main chat API)
+
+**Default Model Configuration:**
+- Main Chat API: openrouter/horizon-beta → anthropic/claude-3.5-sonnet → openai/gpt-4o-mini
+- Prompt Enhancement API: openrouter/horizon-beta → openai/gpt-4o-mini
+- Always use openrouter/horizon-beta as the primary model when available
 
 Key AI considerations:
 - Age-specific guidelines (children need safety/interactivity, seniors need accessibility)
