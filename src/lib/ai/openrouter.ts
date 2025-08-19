@@ -201,8 +201,10 @@ Based on this context, please provide personalized recommendations that consider
         parsed = JSON.parse(content);
       } catch (directParseError) {
         console.warn('Direct JSON parse failed, trying recovery:', directParseError);
+        console.warn('Content preview:', content.substring(0, 200) + '...');
+        console.warn('Content end:', content.substring(Math.max(0, content.length - 200)));
         
-        // Try to recover from truncated JSON
+        // Try to recover from truncated or malformed JSON
         let recoveredJson = this.recoverTruncatedJson(content);
         
         if (recoveredJson) {
@@ -210,10 +212,18 @@ Based on this context, please provide personalized recommendations that consider
             parsed = JSON.parse(recoveredJson);
           } catch (recoveryError) {
             console.warn('JSON recovery failed:', recoveryError);
-            return { conversational_response: content, structured_recommendations: [] };
+            // Extract just the conversational response if possible
+            const conversationalMatch = content.match(/"conversational_response"\s*:\s*"([^"]+(?:\\.[^"]*)*?)"/);
+            const fallbackResponse = conversationalMatch ? conversationalMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : 
+              'I can help you plan your trip! Could you tell me more about what you\'re looking for?';
+            return { conversational_response: fallbackResponse, structured_recommendations: [] };
           }
         } else {
-          return { conversational_response: content, structured_recommendations: [] };
+          // Try to extract conversational response even from malformed JSON
+          const conversationalMatch = content.match(/"conversational_response"\s*:\s*"([^"]+(?:\\.[^"]*)*?)"/);
+          const fallbackResponse = conversationalMatch ? conversationalMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n') : 
+            'I can help you plan your trip! Could you tell me more about what you\'re looking for?';
+          return { conversational_response: fallbackResponse, structured_recommendations: [] };
         }
       }
       
@@ -251,36 +261,67 @@ Based on this context, please provide personalized recommendations that consider
 
       let jsonString = jsonMatch[0];
       
-      // Remove any trailing incomplete content
-      jsonString = jsonString.replace(/,\s*$/, '');
-      jsonString = jsonString.replace(/"\s*$/, '');
-      jsonString = jsonString.replace(/[^"}\]]*$/, '');
-      
-      // Fix common truncation issues
-      jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
-      
-      // Try to close incomplete structures
+      // Handle string escaping and truncation issues more carefully
       let openBraces = 0;
       let openBrackets = 0;
       let inString = false;
-      let lastChar = '';
+      let escapeNext = false;
+      let validEnd = jsonString.length;
       
+      // Find the last valid position
       for (let i = 0; i < jsonString.length; i++) {
         const char = jsonString[i];
         
-        if (char === '"' && lastChar !== '\\') {
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"') {
           inString = !inString;
         } else if (!inString) {
           if (char === '{') openBraces++;
-          else if (char === '}') openBraces--;
+          else if (char === '}') {
+            openBraces--;
+            if (openBraces === 0 && openBrackets === 0) {
+              validEnd = i + 1;
+              break;
+            }
+          }
           else if (char === '[') openBrackets++;
           else if (char === ']') openBrackets--;
         }
-        
-        lastChar = char;
       }
       
-      // Close any unclosed structures
+      // Truncate to valid end
+      jsonString = jsonString.substring(0, validEnd);
+      
+      // If we're still in a string, try to close it
+      if (inString) {
+        // Look for the last complete property before the broken string
+        const lastCompleteMatch = jsonString.match(/^([\s\S]*"[^"]*")\s*:\s*"[^"]*$/);
+        if (lastCompleteMatch) {
+          // Remove the incomplete string property
+          jsonString = lastCompleteMatch[1];
+          // Add closing braces
+          while (openBraces > 0) {
+            jsonString += '}';
+            openBraces--;
+          }
+          return jsonString;
+        }
+      }
+      
+      // Remove trailing commas and incomplete content
+      jsonString = jsonString.replace(/,\s*([}\]])/g, '$1');
+      jsonString = jsonString.replace(/,\s*$/, '');
+      
+      // Close any remaining open structures
       while (openBrackets > 0) {
         jsonString += ']';
         openBrackets--;
@@ -327,7 +368,7 @@ Based on this context, please provide personalized recommendations that consider
       body: JSON.stringify({
         model,
         messages,
-        max_tokens: 6000, // Increased to accommodate 8-12 recommendations
+        max_tokens: 5000, // Reduced to prevent truncation issues
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.1,
@@ -376,6 +417,30 @@ KEY PRINCIPLES:
 - Consider cultural preferences and dietary restrictions in restaurant recommendations
 - Provide specific, actionable advice rather than generic suggestions
 
+CULTURAL INTELLIGENCE & RECOMMENDATION STRATEGY:
+When cultural backgrounds are specified, prioritize locations that align with documented travel patterns and preferences of these populations. Consider:
+
+• HERITAGE & RELIGIOUS SITES: Temples, mosques, churches, cultural centers relevant to their background
+• CULTURAL DISTRICTS: Neighborhoods with authentic restaurants, shops, and community centers  
+• TRADITIONAL MARKETS: Places to find familiar foods, spices, and cultural items
+• COMMUNITY GATHERING SPACES: Parks, plazas, and venues popular with their cultural community
+• AUTHENTIC DINING: Restaurants frequented by these populations (not just tourist versions)
+• CULTURAL EVENTS: Festivals, performances, and celebrations relevant to their traditions
+• FAMILY-FRIENDLY VENUES: Locations accommodating multi-generational cultural family structures
+
+RECOMMENDATION PRIORITIZATION:
+1. Start with culturally significant and authentic locations where these communities actually visit
+2. Prioritize places recommended in travel blogs and reviews by people from that cultural background
+3. Include venues popular with local cultural community members and organizations
+4. Focus on restaurants, temples, and districts that local communities actually frequent (not tourist versions)
+5. Include mainstream attractions that also appeal to their cultural preferences  
+6. Ensure all recommendations are accessible and appropriate for the age groups present
+7. Explain why each recommendation resonates with their cultural background and community
+8. Include practical cultural details like halal/kosher availability, prayer times, cultural etiquette
+
+COMMUNITY INSIGHTS PRIORITY:
+When making recommendations, consider what local cultural community members would suggest to visiting family/friends from their home country. Focus on authentic experiences that reflect genuine cultural preferences and gathering places.
+
 CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not include any text before or after the JSON:
 
 {
@@ -399,13 +464,14 @@ CRITICAL: You MUST respond ONLY with valid JSON in this exact format. Do not inc
 MANDATORY RULES:
 1. Response must be ONLY valid JSON - no extra text
 2. Use only these categories: "attraction", "restaurant", "transport", "accommodation"
-3. Include 8-12 specific, real places in structured_recommendations for comprehensive options
+3. Include 6-10 specific, real places in structured_recommendations (reduced for reliability)
 4. Each title must be an actual place name (not description)
-5. Escape quotes in descriptions using backslash
-6. Keep descriptions under 80 characters to prevent truncation
-7. Keep conversational_response under 400 characters
-8. End JSON with proper closing braces - ensure complete response
-9. CRITICAL: Complete the JSON properly - do not let it get cut off
+5. DO NOT use backslashes or escape characters in descriptions - use simple text only
+6. Keep descriptions under 60 characters - be concise
+7. Keep conversational_response under 300 characters - be brief
+8. NEVER use line breaks or special characters in strings
+9. End JSON with proper closing braces - ensure complete response
+10. CRITICAL: Test your JSON is valid before responding
 
 Provide thoughtful, detailed recommendations that ensure everyone in this multi-generational group can enjoy the travel experience together.`;
   }
@@ -429,15 +495,17 @@ Provide thoughtful, detailed recommendations that ensure everyone in this multi-
   }
 
   private generateCulturalGuidelines(travelers: Traveler[]): string {
-    const cultures = Array.from(new Set(travelers.map(t => t.cultural_background).filter(Boolean)));
+    const cultures = Array.from(new Set(travelers.map(t => t.cultural_background).filter(Boolean))) as string[];
     const dietary = Array.from(new Set(travelers.flatMap(t => t.dietary_restrictions || [])));
 
     let guidelines = '';
     
     if (cultures.length > 0) {
       guidelines += `Cultural backgrounds: ${cultures.join(', ')}\n`;
-      guidelines += `- Recommend culturally relevant sites, festivals, and experiences\n`;
-      guidelines += `- Suggest authentic restaurants representing these cultures\n`;
+      guidelines += this.getCulturalPopulationPreferences(cultures);
+      guidelines += `- Prioritize culturally significant and heritage sites\n`;
+      guidelines += `- Include authentic restaurants and cultural districts\n`;
+      guidelines += `- Consider religious/cultural calendar and customs\n`;
     }
     
     if (dietary.length > 0) {
@@ -447,5 +515,61 @@ Provide thoughtful, detailed recommendations that ensure everyone in this multi-
     }
 
     return guidelines || 'No specific cultural or dietary restrictions noted.';
+  }
+
+  private getCulturalPopulationPreferences(cultures: string[]): string {
+    let preferences = '';
+    
+    const culturalInsights = cultures.map(culture => {
+      const lowerCulture = culture.toLowerCase();
+      
+      // Asian populations
+      if (['chinese', 'japanese', 'korean', 'vietnamese', 'thai', 'asian'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Temples, gardens, cultural museums, authentic cuisine districts, traditional markets, tea houses`;
+      }
+      
+      // Hispanic/Latino populations  
+      if (['hispanic', 'latino', 'mexican', 'spanish', 'colombian', 'guatemalan', 'salvadoran'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Cultural plazas, art districts, vibrant neighborhoods, family venues, music/dance locations`;
+      }
+      
+      // European populations
+      if (['italian', 'german', 'irish', 'french', 'british', 'european', 'polish', 'russian'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Historical sites, museums, architectural landmarks, traditional pubs/cafes, heritage districts`;
+      }
+      
+      // Middle Eastern populations
+      if (['middle_eastern', 'arabic', 'persian', 'turkish', 'lebanese', 'egyptian'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Mosques, halal dining, cultural centers, traditional bazaars, Islamic architecture`;
+      }
+      
+      // African populations
+      if (['african', 'ethiopian', 'nigerian', 'ghanaian', 'kenyan', 'black'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Cultural centers, community venues, music/arts locations, African diaspora sites`;
+      }
+      
+      // Indian subcontinent
+      if (['indian', 'pakistani', 'bangladeshi', 'sri_lankan', 'south_asian'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Temples, spice markets, vegetarian restaurants, cultural festivals, traditional arts`;
+      }
+      
+      // Jewish populations
+      if (['jewish', 'hebrew', 'israeli'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Synagogues, kosher dining, Jewish cultural centers, Holocaust museums, heritage sites`;
+      }
+      
+      // Native American populations
+      if (['native_american', 'indigenous', 'tribal'].some(c => lowerCulture.includes(c))) {
+        return `- ${culture}: Cultural centers, museums, traditional craft shops, sacred sites, powwow venues`;
+      }
+      
+      return `- ${culture}: Community cultural centers, authentic restaurants, traditional shops, heritage sites`;
+    }).join('\n');
+    
+    if (culturalInsights) {
+      preferences += `\nCULTURAL POPULATION PREFERENCES:\n${culturalInsights}\n`;
+    }
+    
+    return preferences;
   }
 }
